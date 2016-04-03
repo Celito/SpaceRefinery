@@ -15,25 +15,31 @@ public class TubesTip : MonoBehaviour
     private MeshRenderer _meshRenderer;
     private List<GameObject> _projectionCubes = new List<GameObject>();
     private bool _buildingStarted = false;
-    private int _selectedProjectionId;
+    //private int _selectedProjectionId;
+    private Vector3 _initialPos;
 
     void Start()
     {
-        try
+        bool poiParentFound = false;
+        var curParent = transform;
+        while(!poiParentFound)
         {
-            var parentGameObject = transform.parent.gameObject;
+            curParent = curParent.parent;
+            if(curParent == null)
+            {
+                Debug.LogError("Missing a POI parent for a tubes begining");
+                Debug.Break();
+            }
+            var parentGameObject = curParent.gameObject;
             _parentPOI = parentGameObject.GetComponent<PointOfInterest>();
-            _meshRenderer = GetComponent<MeshRenderer>();
+            if (_parentPOI)
+            {
+                poiParentFound = true;
+            }
         }
-        catch
-        {
-            Debug.LogError("Missing a parent for a tubes begining");
-        }
-        finally
-        {
-            if (_parentPOI == null)
-                Debug.LogError("The parent of a tubes begining must have a POI script");
-        }
+
+        _meshRenderer = GetComponent<MeshRenderer>();
+        
         for (var i = 0; i < numProjectionCubes; i++)
         {
             var projectionCube = Instantiate(GridManager.instance.ProjectionCube);
@@ -44,6 +50,7 @@ public class TubesTip : MonoBehaviour
             //projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
             _projectionCubes.Add(projectionCube);
         }
+        _initialPos = transform.localPosition - PositionAdjustment(direction);
         SetDirection(direction);
     }
 
@@ -68,7 +75,7 @@ public class TubesTip : MonoBehaviour
     {
         if(_buildingStarted && Input.GetButtonUp("Fire1"))
         {
-            Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (_selectedProjectionId + 1));
+            //Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (_selectedProjectionId + 1));
             //CreatCreateTubee the long part of the tube
             CreateTube();
         }
@@ -77,23 +84,23 @@ public class TubesTip : MonoBehaviour
     public void CreateTube()
     {
         Debug.Log("Creating a tube");
-        if (_selectedProjectionId > 0)
-        {
-            var longTube = Instantiate(GridManager.instance.Tube4);
-            longTube.transform.position = _parentPOI.transform.position +
-                GridManager.instance.DirectionIncrement(direction);
-            Tube longTubeScript = longTube.GetComponent<Tube>();
-            longTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
-            longTubeScript.endDirection = direction;
-            longTubeScript.SetSize(_selectedProjectionId);
-        }
+        //if (_selectedProjectionId > 0)
+        //{
+        //    var longTube = Instantiate(GridManager.instance.Tube4);
+        //    longTube.transform.position = _parentPOI.transform.position + _initialPos +
+        //        GridManager.instance.DirectionIncrement(direction);
+        //    Tube longTubeScript = longTube.GetComponent<Tube>();
+        //    longTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
+        //    longTubeScript.endDirection = direction;
+        //    longTubeScript.SetSize(_selectedProjectionId);
+        //}
         var endTube = Instantiate(GridManager.instance.Tube4);
         foreach (var cube in _projectionCubes)
         {
             cube.SetActive(false);
         }
-        endTube.transform.position = _parentPOI.transform.position +
-            (GridManager.instance.DirectionIncrement(direction) * (_selectedProjectionId + 1));
+        endTube.transform.position = _parentPOI.transform.position + _initialPos +
+            (GridManager.instance.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
         Tube endTubeScript = endTube.GetComponent<Tube>();
         endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
         endTubeScript.endDirection = direction;
@@ -144,34 +151,49 @@ public class TubesTip : MonoBehaviour
             projCube.transform.localPosition = 
                 (GridManager.instance.DirectionIncrement(direction) * (i+1));
         }
+        transform.localPosition = PositionAdjustment(direction) + _initialPos;
         switch (direction)
         {
             case GridManager.Direction.TOP:
                 transform.localEulerAngles = new Vector3(0f, 0f, 0f);
-                transform.localPosition = new Vector3(0f, .5f, 0f);
                 break;
             case GridManager.Direction.BOTTOM:
                 transform.localEulerAngles = new Vector3(180f, 0f, 0f);
-                transform.localPosition = new Vector3(0f, -.5f, 0f);
                 break;
             case GridManager.Direction.FRONT:
                 transform.localEulerAngles = new Vector3(90f, 0f, 0f);
-                transform.localPosition = new Vector3(0f, 0f, .5f);
                 break;
             case GridManager.Direction.BACK:
                 transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
-                transform.localPosition = new Vector3(0f, 0f, -.5f);
                 break;
             case GridManager.Direction.RIGHT:
                 transform.localEulerAngles = new Vector3(0f, 0f, 270f);
-                transform.localPosition = new Vector3(.5f, 0f, 0f);
                 break;
             case GridManager.Direction.LEFT:
                 transform.localEulerAngles = new Vector3(0, 0f, 90f);
-                transform.localPosition = new Vector3(-.5f, 0f, 0f);
                 break;
         }
         this.direction = direction;
     }
 
+
+    private Vector3 PositionAdjustment(GridManager.Direction dir)
+    {
+        switch(dir)
+        {
+            case GridManager.Direction.TOP:
+                return new Vector3(0f, .5f, 0f);
+            case GridManager.Direction.BOTTOM:
+                return new Vector3(0f, -.5f, 0f);
+            case GridManager.Direction.FRONT:
+                return new Vector3(0f, 0f, .5f);
+            case GridManager.Direction.BACK:
+                return new Vector3(0f, 0f, -.5f);
+            case GridManager.Direction.RIGHT:
+                return new Vector3(.5f, 0f, 0f);
+            case GridManager.Direction.LEFT:
+                return new Vector3(-.5f, 0f, 0f);
+        }
+        return Vector3.zero;
+    }
 }

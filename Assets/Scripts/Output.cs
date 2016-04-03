@@ -7,7 +7,7 @@ public class Output : MonoBehaviour
     public GameObject tipRef;
 
     private List<TubesTip> _initialPipeTips;
-    private PointOfInterest _poi;
+    //private PointOfInterest _poi;
 
     // Use this for initialization
     void Start ()
@@ -32,7 +32,7 @@ public class Output : MonoBehaviour
     {
         foreach(TubesTip tip in _initialPipeTips)
         {
-            tip.gameObject.SetActive(true);
+            //tip.gameObject.SetActive(true);
         }
     }
 
@@ -40,7 +40,7 @@ public class Output : MonoBehaviour
     {
         foreach (TubesTip tip in _initialPipeTips)
         {
-            tip.gameObject.SetActive(false);
+            //tip.gameObject.SetActive(false);
         }
     }
 }
