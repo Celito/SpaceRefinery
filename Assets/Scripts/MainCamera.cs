@@ -10,6 +10,9 @@ public class MainCamera : MonoBehaviour
     public float initalDistance = 10f;
     public float maxDistance = 20f;
     public float minDistance = 5f;
+    public float dragVelocity = 0.2f;
+
+    public GameObject cameraBoom;
 
     private Transform _cameraBoomTransform;
 
@@ -30,6 +33,7 @@ public class MainCamera : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
+        cameraBoom = transform.parent.gameObject;
         _cameraBoomTransform = transform.parent;
 
         // put the camera boom at the initial object
@@ -38,9 +42,9 @@ public class MainCamera : MonoBehaviour
         // set the initial distance camera distance from the object
         transform.localPosition.Set(0f, 0f, initalDistance);
 
-        initialPOI.Select();
+        //initialPOI.Select();
 
-        _currPOI = initialPOI;
+        //_currPOI = initialPOI;
     }
 	
 	// Update is called once per frame

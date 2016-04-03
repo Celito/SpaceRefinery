@@ -12,9 +12,9 @@ public class Output : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        _poi = GetComponent<PointOfInterest>();
-        _poi.OnSelected += onSelected;
-        _poi.OnDeselected += onDeselected;
+        //_poi = GetComponent<PointOfInterest>();
+        //_poi.OnSelected += onSelected;
+        //_poi.OnDeselected += onDeselected;
         _initialPipeTips = new List<TubesTip>();
         for(int i = 0; i < transform.childCount; i++)
         {
@@ -22,7 +22,7 @@ public class Output : MonoBehaviour
             if (childrenTip)
             {
                 _initialPipeTips.Add(childrenTip);
-                childrenTip.gameObject.SetActive(false);
+                //childrenTip.gameObject.SetActive(false);
             }
         }
 

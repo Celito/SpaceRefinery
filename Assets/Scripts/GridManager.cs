@@ -16,12 +16,15 @@ public class GridManager : MonoBehaviour
 
     public GameObject MovementPlane;
     public MeshCollider MovementPlaneMesh;
-
+    
     public GameObject Tube4;
 
-    public GameObject Tube4Construction;
+    public GameObject Tube4Blueprint;
+    public GameObject ReservoirBlueprint;
 
     public GameObject SelectedConstructionPart;
+
+    private int _currPartId = -1;
 
     void Awake()
     {
@@ -50,21 +53,47 @@ public class GridManager : MonoBehaviour
             if (MovementPlaneMesh.Raycast(ray, out raycastHit, 10000))
             {
                 Vector3 hitPoint = raycastHit.point;
-                hitPoint.y = 0;
                 hitPoint.x = Mathf.Round(hitPoint.x);
                 hitPoint.z = Mathf.Round(hitPoint.z);
-                //Debug.Log(hitPoint);
+                hitPoint.y = MainCamera.instance.cameraBoom.transform.position.y;
                 SelectedConstructionPart.transform.position = hitPoint;
             }
         }
-	}
+        
+        // Move up and down with the mouse wheel;
+        Vector3 upNDownVec = Vector3.up * (Input.GetAxis("UpNDown") > 0 ? 1 : Input.GetAxis("UpNDown") < 0 ? -1 : 0);
+        MovementPlane.transform.Translate(upNDownVec);
+        MainCamera.instance.cameraBoom.transform.Translate(upNDownVec, Space.World);
+
+        // Move arround the grid with the vertical and horizontal axis
+        Vector3 moveArround = new Vector3(Input.GetAxis("Vertical"), 0, -Input.GetAxis("Horizontal"));
+        moveArround = Quaternion.Euler(0, -45, 0) * moveArround;
+        moveArround *= MainCamera.instance.dragVelocity;
+        MainCamera.instance.cameraBoom.transform.Translate(moveArround, Space.World);
+
+    }
 
     public void SelectPart ( int partId )
     {
+        if(partId != _currPartId)
+        {
+            if(SelectedConstructionPart)
+            {
+                SelectedConstructionPart.SetActive(false);
+                SelectedConstructionPart = null;
+            }
+            _currPartId = partId;
+        }
         if(partId == 0)
         {
             Debug.Log("Tubes selected");
-            SelectedConstructionPart = Tube4Construction;
+            SelectedConstructionPart = Tube4Blueprint;
+            SelectedConstructionPart.SetActive(true);
+        }
+        else if(partId == 1)
+        {
+            Debug.Log("Reservoir selected");
+            SelectedConstructionPart = ReservoirBlueprint;
             SelectedConstructionPart.SetActive(true);
         }
     }

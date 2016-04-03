@@ -41,60 +41,66 @@ public class TubesTip : MonoBehaviour
             projectionCube.SetActive(false);
             var projectionCubeScript = projectionCube.GetComponent<ProjectionCube>();
             projectionCubeScript.SetProjectionId(i);
-            projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
+            //projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
             _projectionCubes.Add(projectionCube);
         }
         SetDirection(direction);
     }
 
-    void OnMouseEnterProjection(int projectionId)
-    {  
-        for(var i = 0; i < numProjectionCubes; i++)
-        {
-            var projectionCubeScript = _projectionCubes[i].GetComponent<ProjectionCube>();
-            if (i <= projectionId)
-            {
-                projectionCubeScript.Highlight();
-            }
-            else
-            {
-                projectionCubeScript.RemoveHighlight();
-            }
-        }
-        _selectedProjectionId = projectionId;
-    }
+    //void OnMouseEnterProjection(int projectionId)
+    //{  
+    //    for(var i = 0; i < numProjectionCubes; i++)
+    //    {
+    //        var projectionCubeScript = _projectionCubes[i].GetComponent<ProjectionCube>();
+    //        if (i <= projectionId)
+    //        {
+    //            projectionCubeScript.Highlight();
+    //        }
+    //        else
+    //        {
+    //            projectionCubeScript.RemoveHighlight();
+    //        }
+    //    }
+    //    _selectedProjectionId = projectionId;
+    //}
 
     void Update()
     {
         if(_buildingStarted && Input.GetButtonUp("Fire1"))
         {
             Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (_selectedProjectionId + 1));
-            //Create the long part of the tube
-            if(_selectedProjectionId > 0)
-            {
-                var longTube = Instantiate(GridManager.instance.Tube4);
-                longTube.transform.position = _parentPOI.transform.position +
-                    GridManager.instance.DirectionIncrement(direction);
-                Tube longTubeScript = longTube.GetComponent<Tube>();
-                longTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
-                longTubeScript.endDirection = direction;
-                longTubeScript.SetSize(_selectedProjectionId);
-            }
-            var endTube = Instantiate(GridManager.instance.Tube4);
-            foreach (var cube in _projectionCubes)
-            {
-                cube.SetActive(false);
-            }
-            endTube.transform.position = _parentPOI.transform.position + 
-                (GridManager.instance.DirectionIncrement(direction) * (_selectedProjectionId + 1));
-            Tube endTubeScript = endTube.GetComponent<Tube>();
-            endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
-            endTubeScript.endDirection = direction;
-            endTubeScript.CreateExtensionTips();
-            gameObject.SetActive(false);
-            _buildingStarted = false;
-            if (OnTubeCreated != null) OnTubeCreated(endTubeScript);
+            //CreatCreateTubee the long part of the tube
+            CreateTube();
         }
+    }
+
+    public void CreateTube()
+    {
+        Debug.Log("Creating a tube");
+        if (_selectedProjectionId > 0)
+        {
+            var longTube = Instantiate(GridManager.instance.Tube4);
+            longTube.transform.position = _parentPOI.transform.position +
+                GridManager.instance.DirectionIncrement(direction);
+            Tube longTubeScript = longTube.GetComponent<Tube>();
+            longTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
+            longTubeScript.endDirection = direction;
+            longTubeScript.SetSize(_selectedProjectionId);
+        }
+        var endTube = Instantiate(GridManager.instance.Tube4);
+        foreach (var cube in _projectionCubes)
+        {
+            cube.SetActive(false);
+        }
+        endTube.transform.position = _parentPOI.transform.position +
+            (GridManager.instance.DirectionIncrement(direction) * (_selectedProjectionId + 1));
+        Tube endTubeScript = endTube.GetComponent<Tube>();
+        endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
+        endTubeScript.endDirection = direction;
+        endTubeScript.CreateExtensionTips();
+        gameObject.SetActive(false);
+        _buildingStarted = false;
+        if (OnTubeCreated != null) OnTubeCreated(endTubeScript);
     }
 
     void OnMouseReleasedProjection(int projectionId)
@@ -104,24 +110,24 @@ public class TubesTip : MonoBehaviour
 
     void OnMouseDown()
     {
-        _buildingStarted = true;
-        foreach(var cube in _projectionCubes)
-        {
-            cube.SetActive(true);
-        }
+        //_buildingStarted = true;
+        //foreach(var cube in _projectionCubes)
+        //{
+        //    cube.SetActive(true);
+        //}
     }
 
-    void OnMouseEnter()
-    {
-        GUIManager.instance.changeCursor(GUIManager.ADD_CURSOR);
-        _meshRenderer.material = highlightedMaterial;
-    }
+    //void OnMouseEnter()
+    //{
+    //    GUIManager.instance.changeCursor(GUIManager.ADD_CURSOR);
+    //    _meshRenderer.material = highlightedMaterial;
+    //}
 
-    void OnMouseExit()
-    {
-        GUIManager.instance.changeCursor(GUIManager.NORMAL_CURSOR);
-        _meshRenderer.material = normalMaterial;
-    }
+    //void OnMouseExit()
+    //{
+    //    GUIManager.instance.changeCursor(GUIManager.NORMAL_CURSOR);
+    //    _meshRenderer.material = normalMaterial;
+    //}
 
     public void SetDirection(GridManager.Direction direction)
     {
@@ -145,11 +151,11 @@ public class TubesTip : MonoBehaviour
                 transform.localPosition = new Vector3(0f, .5f, 0f);
                 break;
             case GridManager.Direction.BOTTOM:
-                transform.localEulerAngles = new Vector3(0f, 0f, 0f);
+                transform.localEulerAngles = new Vector3(180f, 0f, 0f);
                 transform.localPosition = new Vector3(0f, -.5f, 0f);
                 break;
             case GridManager.Direction.FRONT:
-                transform.localEulerAngles = new Vector3(-90f, 0f, 0f);
+                transform.localEulerAngles = new Vector3(90f, 0f, 0f);
                 transform.localPosition = new Vector3(0f, 0f, .5f);
                 break;
             case GridManager.Direction.BACK:
@@ -157,7 +163,7 @@ public class TubesTip : MonoBehaviour
                 transform.localPosition = new Vector3(0f, 0f, -.5f);
                 break;
             case GridManager.Direction.RIGHT:
-                transform.localEulerAngles = new Vector3(0f, 0f, 90f);
+                transform.localEulerAngles = new Vector3(0f, 0f, 270f);
                 transform.localPosition = new Vector3(.5f, 0f, 0f);
                 break;
             case GridManager.Direction.LEFT:
