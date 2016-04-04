@@ -13,7 +13,7 @@ public class TubesTip : MonoBehaviour
 
     private PointOfInterest _parentPOI;
     private MeshRenderer _meshRenderer;
-    private List<GameObject> _projectionCubes = new List<GameObject>();
+    //private List<GameObject> _projectionCubes = new List<GameObject>();
     private bool _buildingStarted = false;
     //private int _selectedProjectionId;
     private Vector3 _initialPos;
@@ -40,16 +40,16 @@ public class TubesTip : MonoBehaviour
 
         _meshRenderer = GetComponent<MeshRenderer>();
         
-        for (var i = 0; i < numProjectionCubes; i++)
-        {
-            var projectionCube = Instantiate(GridManager.instance.ProjectionCube);
-            projectionCube.transform.parent = transform.parent;
-            projectionCube.SetActive(false);
-            var projectionCubeScript = projectionCube.GetComponent<ProjectionCube>();
-            projectionCubeScript.SetProjectionId(i);
-            //projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
-            _projectionCubes.Add(projectionCube);
-        }
+        //for (var i = 0; i < numProjectionCubes; i++)
+        //{
+        //    var projectionCube = Instantiate(GridManager.instance.ProjectionCube);
+        //    projectionCube.transform.parent = transform.parent;
+        //    projectionCube.SetActive(false);
+        //    var projectionCubeScript = projectionCube.GetComponent<ProjectionCube>();
+        //    projectionCubeScript.SetProjectionId(i);
+        //    //projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
+        //    _projectionCubes.Add(projectionCube);
+        //}
         _initialPos = transform.localPosition - PositionAdjustment(direction);
         SetDirection(direction);
     }
@@ -95,10 +95,10 @@ public class TubesTip : MonoBehaviour
         //    longTubeScript.SetSize(_selectedProjectionId);
         //}
         var endTube = Instantiate(GridManager.instance.Tube4);
-        foreach (var cube in _projectionCubes)
-        {
-            cube.SetActive(false);
-        }
+        //foreach (var cube in _projectionCubes)
+        //{
+        //    cube.SetActive(false);
+        //}
         endTube.transform.position = _parentPOI.transform.position + _initialPos +
             (GridManager.instance.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
         Tube endTubeScript = endTube.GetComponent<Tube>();
@@ -145,12 +145,12 @@ public class TubesTip : MonoBehaviour
             numProjectionCubes = (uint)Mathf.Floor(hitInfo.distance);
             // use the Raycast to limit the num of projection cubes and get rid of the extra ones
         }
-        for (int i = 0; i < _projectionCubes.Count; i++)
-        {
-            var projCube = _projectionCubes[i];
-            projCube.transform.localPosition = 
-                (GridManager.instance.DirectionIncrement(direction) * (i+1));
-        }
+        //for (int i = 0; i < _projectionCubes.Count; i++)
+        //{
+        //    var projCube = _projectionCubes[i];
+        //    projCube.transform.localPosition = 
+        //        (GridManager.instance.DirectionIncrement(direction) * (i+1));
+        //}
         transform.localPosition = PositionAdjustment(direction) + _initialPos;
         switch (direction)
         {

@@ -24,6 +24,9 @@ public class GridManager : MonoBehaviour
 
     public GameObject SelectedConstructionPart;
 
+    public Material BuildingEnabledMaterial;
+    public Material BuildingBlockedMaterial;
+
     private int _currPartId = -1;
 
     void Awake()
