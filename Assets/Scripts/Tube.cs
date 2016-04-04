@@ -79,7 +79,7 @@ public class Tube : MonoBehaviour
         for (int dirIndex = 1; dirIndex < 7; dirIndex++)
         {
             GridManager.Direction direction = (GridManager.Direction)dirIndex;
-            Vector3 directionVector = GridManager.instance.DirectionIncrement(direction);
+            Vector3 directionVector = GridManager.DirectionIncrement(direction);
             RaycastHit hitInfo;
             if (direction != startDirection && !Physics.Raycast(transform.position, directionVector, out hitInfo, 1))
             {
@@ -99,7 +99,7 @@ public class Tube : MonoBehaviour
         _body.transform.localScale = new Vector3(1f, 1f, size);
         _body.transform.localPosition = new Vector3(0f, 0f, size / 2);
         var boxDistance = ((size / 2) - 0.5f);
-        var directionVector = GridManager.instance.DirectionIncrement(endDirection);
+        var directionVector = GridManager.DirectionIncrement(endDirection);
         var sizeVector = directionVector * (size - 1);
         sizeVector = new Vector3(Mathf.Abs(sizeVector.x), Mathf.Abs(sizeVector.y), Mathf.Abs(sizeVector.z));
         _boxCollider.size = (Vector3.one) + sizeVector;
@@ -143,7 +143,7 @@ public class Tube : MonoBehaviour
         }
 
         _body.transform.localEulerAngles = dirBodyInfo.rotation;
-        _body.transform.localPosition = GridManager.instance.DirectionIncrement(to) * ((_size - 1f) / 2f);
+        _body.transform.localPosition = GridManager.DirectionIncrement(to) * ((_size - 1f) / 2f);
         _tip1.transform.localEulerAngles = _tipDirTable[from].rotation;
         _tip1.transform.localPosition = _tipDirTable[from].position;
         _tip2.transform.localEulerAngles = _tipDirTable[to].rotation;

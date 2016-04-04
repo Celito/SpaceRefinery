@@ -59,7 +59,7 @@ public class GridManager : MonoBehaviour
                 hitPoint.x = Mathf.Round(hitPoint.x);
                 hitPoint.z = Mathf.Round(hitPoint.z);
                 hitPoint.y = MainCamera.instance.cameraBoom.transform.position.y;
-                SelectedConstructionPart.transform.position = hitPoint;
+                SelectedConstructionPart.SendMessage("MoveBlueprintTo", hitPoint);
             }
         }
         
@@ -111,7 +111,7 @@ public class GridManager : MonoBehaviour
         return Direction.RIGHT;
     }
     
-    public Vector3 DirectionIncrement(Direction dir)
+    public static Vector3 DirectionIncrement(Direction dir)
     {
         if (dir == Direction.BACK) return new Vector3(0, 0, -1);
         if (dir == Direction.FRONT) return new Vector3(0, 0, 1);

@@ -100,7 +100,7 @@ public class TubesTip : MonoBehaviour
         //    cube.SetActive(false);
         //}
         endTube.transform.position = _parentPOI.transform.position + _initialPos +
-            (GridManager.instance.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
+            (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
         Tube endTubeScript = endTube.GetComponent<Tube>();
         endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
         endTubeScript.endDirection = direction;
@@ -138,7 +138,7 @@ public class TubesTip : MonoBehaviour
 
     public void SetDirection(GridManager.Direction direction)
     {
-        var directionVector = GridManager.instance.DirectionIncrement(direction);
+        var directionVector = GridManager.DirectionIncrement(direction);
         RaycastHit hitInfo;
         if(Physics.Raycast(transform.position, directionVector, out hitInfo, numProjectionCubes))
         {
@@ -176,7 +176,6 @@ public class TubesTip : MonoBehaviour
         this.direction = direction;
     }
 
-
     private Vector3 PositionAdjustment(GridManager.Direction dir)
     {
         switch(dir)
@@ -195,5 +194,11 @@ public class TubesTip : MonoBehaviour
                 return new Vector3(-.5f, 0f, 0f);
         }
         return Vector3.zero;
+    }
+
+    void OnValidate()
+    {
+        _initialPos = transform.localPosition - PositionAdjustment(direction);
+        SetDirection(direction);
     }
 }
