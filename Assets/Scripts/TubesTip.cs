@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 public class TubesTip : MonoBehaviour
 {
+    public enum TubeTipType
+    {
+        Start,
+        Extension,
+        Conection
+    }
+
     public delegate void TubeCreated(Tube tube);
     public event TubeCreated OnTubeCreated;
     
@@ -13,10 +20,12 @@ public class TubesTip : MonoBehaviour
 
     private PointOfInterest _parentPOI;
     private MeshRenderer _meshRenderer;
-    //private List<GameObject> _projectionCubes = new List<GameObject>();
     private bool _buildingStarted = false;
-    //private int _selectedProjectionId;
     private Vector3 _initialPos;
+
+    private Tube _parentTube;
+
+    private TubeTipType _type = TubeTipType.Start;
 
     void Start()
     {
@@ -39,102 +48,56 @@ public class TubesTip : MonoBehaviour
         }
 
         _meshRenderer = GetComponent<MeshRenderer>();
-        
-        //for (var i = 0; i < numProjectionCubes; i++)
-        //{
-        //    var projectionCube = Instantiate(GridManager.instance.ProjectionCube);
-        //    projectionCube.transform.parent = transform.parent;
-        //    projectionCube.SetActive(false);
-        //    var projectionCubeScript = projectionCube.GetComponent<ProjectionCube>();
-        //    projectionCubeScript.SetProjectionId(i);
-        //    //projectionCubeScript.OnMouseEntered += OnMouseEnterProjection;
-        //    _projectionCubes.Add(projectionCube);
-        //}
+
         _initialPos = transform.localPosition - PositionAdjustment(direction);
         SetDirection(direction);
     }
-
-    //void OnMouseEnterProjection(int projectionId)
-    //{  
-    //    for(var i = 0; i < numProjectionCubes; i++)
-    //    {
-    //        var projectionCubeScript = _projectionCubes[i].GetComponent<ProjectionCube>();
-    //        if (i <= projectionId)
-    //        {
-    //            projectionCubeScript.Highlight();
-    //        }
-    //        else
-    //        {
-    //            projectionCubeScript.RemoveHighlight();
-    //        }
-    //    }
-    //    _selectedProjectionId = projectionId;
-    //}
 
     void Update()
     {
         if(_buildingStarted && Input.GetButtonUp("Fire1"))
         {
-            //Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (_selectedProjectionId + 1));
-            //CreatCreateTubee the long part of the tube
             CreateTube();
         }
     }
 
     public void CreateTube()
     {
-        Debug.Log("Creating a tube");
-        //if (_selectedProjectionId > 0)
-        //{
-        //    var longTube = Instantiate(GridManager.instance.Tube4);
-        //    longTube.transform.position = _parentPOI.transform.position + _initialPos +
-        //        GridManager.instance.DirectionIncrement(direction);
-        //    Tube longTubeScript = longTube.GetComponent<Tube>();
-        //    longTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
-        //    longTubeScript.endDirection = direction;
-        //    longTubeScript.SetSize(_selectedProjectionId);
-        //}
-        var endTube = Instantiate(GridManager.instance.Tube4);
-        //foreach (var cube in _projectionCubes)
-        //{
-        //    cube.SetActive(false);
-        //}
-        endTube.transform.position = _parentPOI.transform.position + _initialPos +
-            (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
-        Tube endTubeScript = endTube.GetComponent<Tube>();
-        endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
-        endTubeScript.endDirection = direction;
-        endTubeScript.CreateExtensionTips();
-        gameObject.SetActive(false);
-        _buildingStarted = false;
-        if (OnTubeCreated != null) OnTubeCreated(endTubeScript);
+        if(_type == TubeTipType.Start)
+        {
+            Debug.Log("Creating a tube");
+            var endTube = Instantiate(GridManager.instance.Tube4);
+            endTube.transform.position = _parentPOI.transform.position + _initialPos +
+                (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
+            Tube endTubeScript = endTube.GetComponent<Tube>();
+            endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
+            endTubeScript.endDirection = direction;
+            endTubeScript.CreateExtensionTips();
+            gameObject.SetActive(false);
+            _buildingStarted = false;
+            if (OnTubeCreated != null) OnTubeCreated(endTubeScript);
+        }
+        else if(_type == TubeTipType.Extension)
+        {
+            Debug.Log("Extending a tube");
+            _parentTube.ExtendTube(direction);
+        }
+    }
+
+    public void SetType(TubeTipType type)
+    {
+        _type = type;
+    }
+
+    public void SetParentTube(Tube parentTube)
+    {
+        _parentTube = parentTube;
     }
 
     void OnMouseReleasedProjection(int projectionId)
     {
         Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (projectionId + 1));
     }
-
-    void OnMouseDown()
-    {
-        //_buildingStarted = true;
-        //foreach(var cube in _projectionCubes)
-        //{
-        //    cube.SetActive(true);
-        //}
-    }
-
-    //void OnMouseEnter()
-    //{
-    //    GUIManager.instance.changeCursor(GUIManager.ADD_CURSOR);
-    //    _meshRenderer.material = highlightedMaterial;
-    //}
-
-    //void OnMouseExit()
-    //{
-    //    GUIManager.instance.changeCursor(GUIManager.NORMAL_CURSOR);
-    //    _meshRenderer.material = normalMaterial;
-    //}
 
     public void SetDirection(GridManager.Direction direction)
     {
@@ -145,12 +108,6 @@ public class TubesTip : MonoBehaviour
             numProjectionCubes = (uint)Mathf.Floor(hitInfo.distance);
             // use the Raycast to limit the num of projection cubes and get rid of the extra ones
         }
-        //for (int i = 0; i < _projectionCubes.Count; i++)
-        //{
-        //    var projCube = _projectionCubes[i];
-        //    projCube.transform.localPosition = 
-        //        (GridManager.instance.DirectionIncrement(direction) * (i+1));
-        //}
         transform.localPosition = PositionAdjustment(direction) + _initialPos;
         switch (direction)
         {

@@ -58,7 +58,7 @@ public class PointOfInterest : MonoBehaviour
         }
         else
         {
-            MainCamera.instance.SetNewPOI(this);
+            //MainCamera.instance.SetNewPOI(this);
         }
     }
 

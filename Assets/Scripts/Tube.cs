@@ -10,8 +10,8 @@ public class Tube : MonoBehaviour
     public GridManager.Direction endDirection = GridManager.Direction.BACK;
 
     private GameObject _body;
-    private GameObject _tip1;
-    private GameObject _tip2;
+    private GameObject _connection1;
+    private GameObject _connection2;
     private BoxCollider _boxCollider;
 
     private List<TubesTip> _extensionTips;
@@ -20,11 +20,25 @@ public class Tube : MonoBehaviour
     private bool _reversed;
     private int _size = 1;
 
+    private List<SectionInfo> _sections;
+
     struct DirectionInfo
     {
         public int id;
         public Vector3 rotation;
         public Vector3 position;
+    }
+
+    class SectionInfo
+    {
+        public uint length;
+        public GameObject body;
+        public GameObject startTip;
+        public GameObject endTip;
+        public GridManager.Direction startDir;
+        public GridManager.Direction endDir;
+        public Vector3 initialPosition;
+        public bool isCurve = false;
     }
 
     private static Dictionary<Vector2, DirectionInfo> _bodyDirTable = new Dictionary<Vector2, DirectionInfo>()
@@ -62,15 +76,41 @@ public class Tube : MonoBehaviour
     void Awake ()
     {
         _body = transform.FindChild("Body").gameObject;
-        _tip1 = transform.FindChild("Tip1").gameObject;
-        _tip2 = transform.FindChild("Tip2").gameObject;
+        _connection1 = transform.FindChild("Connection1").gameObject;
+        _connection2 = transform.FindChild("Connection2").gameObject;
+        _sections = new List<SectionInfo>();
+        _sections.Add(
+            new SectionInfo {
+                length = 1, startDir = startDirection, endDir = endDirection,
+                body = _body, startTip = _connection1, endTip = _connection2, initialPosition = Vector3.zero }
+        );
         _boxCollider = GetComponent<BoxCollider>();
     }
 
     void Start ()
+    {   
+        var startSection = _sections[0];
+        startSection.startDir = startDirection;
+        SetSectionDirection(0, endDirection);
+    }
+
+    public void ExtendTube(GridManager.Direction dir)
     {
-        SetDirection(startDirection, endDirection);
-        
+        var currSec = _sections[_sections.Count - 1];
+        if (endDirection != dir)
+        {
+            // bend the current section in the new direction;
+            SetSectionDirection(_sections.Count - 1, dir);
+        }
+        else
+        {
+            // remove one of the length of the curr section and add a new curve section at the end;
+            // set this new section as the current one;
+        }
+
+        //finish the current section and add the new sections;
+        CreateNewSection(dir);
+        endDirection = dir;
     }
 
     public void CreateExtensionTips()
@@ -81,17 +121,47 @@ public class Tube : MonoBehaviour
             GridManager.Direction direction = (GridManager.Direction)dirIndex;
             Vector3 directionVector = GridManager.DirectionIncrement(direction);
             RaycastHit hitInfo;
-            if (direction != startDirection && !Physics.Raycast(transform.position, directionVector, out hitInfo, 1))
+            bool hitSomething = Physics.Raycast(transform.position, directionVector, out hitInfo, 1);
+            if (direction != startDirection && !hitSomething)
             {
                 var tip = Instantiate(GridManager.instance.TubesTip);
                 var tipScript = tip.GetComponent<TubesTip>();
                 tipScript.transform.parent = transform;
                 tipScript.transform.localPosition = Vector3.zero;
                 tipScript.SetDirection(direction);
-                tipScript.OnTubeCreated += ExtensionCreated;
+                //tipScript.OnTubeCreated += ExtensionCreated;
+                tipScript.SetType(TubesTip.TubeTipType.Extension);
+                tipScript.SetParentTube(this);
                 _extensionTips.Add(tipScript);
             }
+
+            if (hitSomething && hitInfo.collider.gameObject.tag == "TubeTip")
+            {
+                GameObject hitObject = hitInfo.collider.gameObject;
+                TubesTip tubesTip = hitObject.GetComponent<TubesTip>();
+                tubesTip.SetType(TubesTip.TubeTipType.Conection);
+            }
         }
+    }
+
+    public void CreateNewSection(GridManager.Direction dir)
+    {
+        var currSec = _sections[_sections.Count - 1];
+        var sectionInfo = new SectionInfo();
+        sectionInfo.startDir = GridManager.instance.OppositeDir(currSec.endDir);
+        sectionInfo.endDir = dir;
+        sectionInfo.length = 1;
+        sectionInfo.startTip = currSec.endTip;
+        sectionInfo.endTip = Instantiate(sectionInfo.startTip);
+        sectionInfo.endTip.transform.parent = transform;
+        sectionInfo.endTip.name = "Connection" + (_sections.Count + 2);
+        sectionInfo.body = Instantiate(GridManager.instance.TubeBodyStraight);
+        sectionInfo.body.transform.parent = transform;
+        sectionInfo.body.name = "Body";
+        sectionInfo.initialPosition = currSec.initialPosition +
+            (GridManager.DirectionIncrement(currSec.endDir) * currSec.length);
+        _sections.Add(sectionInfo);
+        SetSectionDirection(_sections.Count - 1, dir);
     }
 
     public void SetSize(int size)
@@ -104,57 +174,52 @@ public class Tube : MonoBehaviour
         sizeVector = new Vector3(Mathf.Abs(sizeVector.x), Mathf.Abs(sizeVector.y), Mathf.Abs(sizeVector.z));
         _boxCollider.size = (Vector3.one) + sizeVector;
         _boxCollider.center = directionVector * boxDistance;
-        _tip2.SetActive(size == 0);
+        _connection2.SetActive(size == 0);
         _size = size;
     }
-
-    void ExtensionCreated(Tube tube)
+    
+    public void SetSectionDirection(int sectionId, GridManager.Direction to)
     {
-        _extensionTips.ForEach((tip) => { tip.gameObject.SetActive(false); });
-        SetDirection(this.startDirection, tube.endDirection);
-    }
-
-    public void SetDirection(GridManager.Direction from, GridManager.Direction to)
-    {
-        var currDirBodyInfo = _bodyDirTable[_currConexion];
-        var dirVec = new Vector2((int)from, (int)to);
-        _reversed = from > to;
-        if (from > to)
+        var currSec = _sections[sectionId];
+        var dirVec = new Vector2((int)currSec.startDir, (int)to);
+        _reversed = currSec.startDir > to;
+        if (_reversed)
         {
-            dirVec = new Vector2((int)to, (int)from);
+            dirVec = new Vector2((int)to, (int)currSec.startDir);
         }
         var dirBodyInfo = _bodyDirTable[dirVec];
 
-        if (dirBodyInfo.id > 3 && currDirBodyInfo.id <= 3)
+        if (dirBodyInfo.id > 3 && !currSec.isCurve)
         {
             // swap to curve
-            Destroy(_body);
-            _body = Instantiate(GridManager.instance.TubeBodyCurve);
-            _body.transform.parent = transform;
-            _body.name = "Body";
+            Destroy(currSec.body);
+            currSec.body = Instantiate(GridManager.instance.TubeBodyCurve);
+            currSec.body.transform.parent = transform;
+            currSec.body.name = "Body";
+            currSec.isCurve = true;
         }
-        else if(dirBodyInfo.id <= 3 && currDirBodyInfo.id > 3)
+        else if (dirBodyInfo.id <= 3 && currSec.isCurve)
         {
             // swap to straight
-            Destroy(_body);
-            _body = Instantiate(GridManager.instance.TubeBodyStraight);
-            _body.transform.parent = transform;
-            _body.name = "Body";
+            Destroy(currSec.body);
+            currSec.body = Instantiate(GridManager.instance.TubeBodyStraight);
+            currSec.body.transform.parent = transform;
+            currSec.body.name = "Body";
+            currSec.isCurve = false;
         }
 
-        _body.transform.localEulerAngles = dirBodyInfo.rotation;
-        _body.transform.localPosition = GridManager.DirectionIncrement(to) * ((_size - 1f) / 2f);
-        _tip1.transform.localEulerAngles = _tipDirTable[from].rotation;
-        _tip1.transform.localPosition = _tipDirTable[from].position;
-        _tip2.transform.localEulerAngles = _tipDirTable[to].rotation;
-        _tip2.transform.localPosition = _tipDirTable[to].position;
-
-        startDirection = from;
-        endDirection = to;
+        currSec.body.transform.localEulerAngles = dirBodyInfo.rotation;
+        currSec.body.transform.localPosition = (GridManager.DirectionIncrement(to) * ((_size - 1f) / 2f)) + currSec.initialPosition;
+        currSec.startTip.transform.localEulerAngles = _tipDirTable[currSec.startDir].rotation;
+        currSec.startTip.transform.localPosition = _tipDirTable[currSec.startDir].position + currSec.initialPosition;
+        currSec.endTip.transform.localEulerAngles = _tipDirTable[to].rotation;
+        currSec.endTip.transform.localPosition = _tipDirTable[to].position + currSec.initialPosition;
+        
+        currSec.endDir = to;
     }
-	
-	// Update is called once per frame
-	void Update ()
+
+    // Update is called once per frame
+    void Update ()
     {
 	
 	}
