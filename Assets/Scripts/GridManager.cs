@@ -14,8 +14,8 @@ public class GridManager : MonoBehaviour
     public GameObject TubeBodyStraight;
     public GameObject TubeBodyCurve;
 
-    public GameObject MovementPlane;
-    public MeshCollider MovementPlaneMesh;
+    public GameObject MovementPlaneGameObj;
+    public MeshCollider MovementPlaneMeshCollider;
     
     public GameObject Tube4;
 
@@ -43,8 +43,8 @@ public class GridManager : MonoBehaviour
     
     void Start ()
     {
-        MovementPlaneMesh = MovementPlane.GetComponent<MeshCollider>();
-	}
+        MovementPlaneMeshCollider = MovementPlaneGameObj.GetComponent<MeshCollider>();
+    }
 	
 	// Update is called once per frame
 	void Update ()
@@ -53,7 +53,7 @@ public class GridManager : MonoBehaviour
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit raycastHit;
-            if (MovementPlaneMesh.Raycast(ray, out raycastHit, 10000))
+            if (MovementPlaneMeshCollider.Raycast(ray, out raycastHit, 10000))
             {
                 Vector3 hitPoint = raycastHit.point;
                 hitPoint.x = Mathf.Round(hitPoint.x);
@@ -65,15 +65,24 @@ public class GridManager : MonoBehaviour
         
         // Move up and down with the mouse wheel;
         Vector3 upNDownVec = Vector3.up * (Input.GetAxis("UpNDown") > 0 ? 1 : Input.GetAxis("UpNDown") < 0 ? -1 : 0);
-        MovementPlane.transform.Translate(upNDownVec);
+        MovementPlaneGameObj.transform.Translate(upNDownVec);
         MainCamera.instance.cameraBoom.transform.Translate(upNDownVec, Space.World);
 
         // Move arround the grid with the vertical and horizontal axis
-        Vector3 moveArround = new Vector3(Input.GetAxis("Vertical"), 0, -Input.GetAxis("Horizontal"));
-        moveArround = Quaternion.Euler(0, -45, 0) * moveArround;
-        moveArround *= MainCamera.instance.dragVelocity;
-        MainCamera.instance.cameraBoom.transform.Translate(moveArround, Space.World);
+        Vector3 planeNormal = MovementPlaneGameObj.transform.up;
+        Vector3 cameraForward = MainCamera.instance.transform.forward;
+        Vector3 cameraRight = MainCamera.instance.transform.right;
+        Vector3 movementForward = ProjectVectorOntoPlane(cameraForward, planeNormal).normalized * Input.GetAxis("Vertical");
+        Vector3 movementSideways = ProjectVectorOntoPlane(cameraRight, planeNormal).normalized *Input.GetAxis("Horizontal");
+        Vector3 cameraPlaneMovement = (movementForward + movementSideways) * Time.deltaTime * MainCamera.instance.dragVelocity;
+        MainCamera.instance.cameraBoom.transform.Translate(cameraPlaneMovement, Space.World);
 
+    }
+
+    private Vector3 ProjectVectorOntoPlane(Vector3 vec, Vector3 planeNormal)
+    {
+        var distance = -Vector3.Dot(planeNormal.normalized, vec);
+        return vec + planeNormal.normalized * distance;
     }
 
     public void SelectPart ( int partId )
