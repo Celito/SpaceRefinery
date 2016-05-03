@@ -21,6 +21,7 @@ public class Tube : MonoBehaviour
     private int _size = 1;
 
     private List<SectionInfo> _sections;
+    private Vector3 _globalEndPosition;
 
     public struct DirectionInfo
     {
@@ -92,6 +93,7 @@ public class Tube : MonoBehaviour
         var startSection = _sections[0];
         startSection.startDir = startDirection;
         SetSectionDirection(0, endDirection);
+        _globalEndPosition = new Vector3();
     }
 
     public void ExtendTube(GridManager.Direction dir)
@@ -111,6 +113,53 @@ public class Tube : MonoBehaviour
         //finish the current section and add the new sections;
         CreateNewSection(dir);
         endDirection = dir;
+
+        // resposition the global end position
+        _globalEndPosition += GridManager.DirectionIncrement(dir);
+
+        //change teh extension tips position, destroi and create new ones if necessary
+        for(int dirIndex = 1; dirIndex < 7; dirIndex++)
+        {
+            var extensionTip = _extensionTips[dirIndex - 1];
+            GridManager.Direction curDirection = (GridManager.Direction)dirIndex;
+            GridManager.Direction reverseDirection = GridManager.instance.OppositeDir(dir);
+            if(reverseDirection == curDirection)
+            {
+                if(extensionTip != null)
+                {
+                    // remove the reverse tip
+                    DestroyImmediate(extensionTip.gameObject);
+                    _extensionTips[dirIndex - 1] = null;
+                }
+                continue;
+            }
+            Vector3 directionVector = GridManager.DirectionIncrement(curDirection);
+            RaycastHit hitInfo;
+            bool hitSomething = Physics.Raycast(GetTubesEndPosition(), directionVector, out hitInfo, 1);
+            if (extensionTip != null && !hitSomething)
+            {
+                extensionTip.MoveTo(GetTubesEndPosition());
+            }
+            else if(extensionTip == null && !hitSomething)
+            {
+                // create new extension tip
+                var tip = Instantiate(GridManager.instance.TubesTip);
+                var tipScript = tip.GetComponent<TubesTip>();
+                tipScript.transform.parent = transform;
+                tipScript.MoveTo(GetTubesEndPosition());
+                tipScript.SetDirection(curDirection);
+                //tipScript.OnTubeCreated += ExtensionCreated;
+                tipScript.SetType(TubesTip.TubeTipType.Extension);
+                tipScript.SetParentTube(this);
+                _extensionTips[dirIndex - 1] = tipScript;
+            } 
+            else if (extensionTip != null && hitSomething)
+            {
+                // remove tip
+                DestroyImmediate(extensionTip.gameObject);
+                _extensionTips[dirIndex - 1] = null;
+            }
+        }
     }
 
     public void CreateExtensionTips()
@@ -133,6 +182,10 @@ public class Tube : MonoBehaviour
                 tipScript.SetType(TubesTip.TubeTipType.Extension);
                 tipScript.SetParentTube(this);
                 _extensionTips.Add(tipScript);
+            }
+            else
+            {
+                _extensionTips.Add(null);
             }
 
             if (hitSomething && hitInfo.collider.gameObject.tag == "TubeTip")
@@ -162,6 +215,11 @@ public class Tube : MonoBehaviour
             (GridManager.DirectionIncrement(currSec.endDir) * currSec.length);
         _sections.Add(sectionInfo);
         SetSectionDirection(_sections.Count - 1, dir);
+    }
+
+    public Vector3 GetTubesEndPosition()
+    {
+        return _globalEndPosition;
     }
 
     public void SetSize(int size)

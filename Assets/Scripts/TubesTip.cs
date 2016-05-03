@@ -99,6 +99,12 @@ public class TubesTip : MonoBehaviour
         Debug.Log("MOUSE RELEASED ON THE TUBE NUMBER " + (projectionId + 1));
     }
 
+    public void MoveTo(Vector3 pos)
+    {
+        _initialPos = pos;
+        SetDirection(direction);
+    }
+
     public void SetDirection(GridManager.Direction direction)
     {
         var directionVector = GridManager.DirectionIncrement(direction);
