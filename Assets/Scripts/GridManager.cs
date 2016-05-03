@@ -76,7 +76,6 @@ public class GridManager : MonoBehaviour
         Vector3 movementSideways = ProjectVectorOntoPlane(cameraRight, planeNormal).normalized *Input.GetAxis("Horizontal");
         Vector3 cameraPlaneMovement = (movementForward + movementSideways) * Time.deltaTime * MainCamera.instance.dragVelocity;
         MainCamera.instance.cameraBoom.transform.Translate(cameraPlaneMovement, Space.World);
-
     }
 
     private Vector3 ProjectVectorOntoPlane(Vector3 vec, Vector3 planeNormal)

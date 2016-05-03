@@ -22,7 +22,7 @@ public class Tube : MonoBehaviour
 
     private List<SectionInfo> _sections;
 
-    struct DirectionInfo
+    public struct DirectionInfo
     {
         public int id;
         public Vector3 rotation;
@@ -41,7 +41,7 @@ public class Tube : MonoBehaviour
         public bool isCurve = false;
     }
 
-    private static Dictionary<Vector2, DirectionInfo> _bodyDirTable = new Dictionary<Vector2, DirectionInfo>()
+    public static Dictionary<Vector2, DirectionInfo> BodyDirTable = new Dictionary<Vector2, DirectionInfo>()
     {
         { new Vector2(1, 6), new DirectionInfo { id =  1, rotation = new Vector3( 90,   0,   0) } },
         { new Vector2(2, 5), new DirectionInfo { id =  2, rotation = new Vector3(  0,  90,   0) } },
@@ -60,7 +60,7 @@ public class Tube : MonoBehaviour
         { new Vector2(5, 6), new DirectionInfo { id = 10, rotation = new Vector3( 90, 180,   0) } }
     };
 
-    private static Dictionary<GridManager.Direction, DirectionInfo> _tipDirTable = 
+    public static Dictionary<GridManager.Direction, DirectionInfo> TipDirTable = 
         new Dictionary<GridManager.Direction, DirectionInfo>()
     {
         { GridManager.Direction.BOTTOM, new DirectionInfo { id = 1, rotation = new Vector3( 90,  0,  0), position = new Vector3( 0, -.5f, 0)} },
@@ -187,7 +187,7 @@ public class Tube : MonoBehaviour
         {
             dirVec = new Vector2((int)to, (int)currSec.startDir);
         }
-        var dirBodyInfo = _bodyDirTable[dirVec];
+        var dirBodyInfo = BodyDirTable[dirVec];
 
         if (dirBodyInfo.id > 3 && !currSec.isCurve)
         {
@@ -210,10 +210,10 @@ public class Tube : MonoBehaviour
 
         currSec.body.transform.localEulerAngles = dirBodyInfo.rotation;
         currSec.body.transform.localPosition = (GridManager.DirectionIncrement(to) * ((_size - 1f) / 2f)) + currSec.initialPosition;
-        currSec.startTip.transform.localEulerAngles = _tipDirTable[currSec.startDir].rotation;
-        currSec.startTip.transform.localPosition = _tipDirTable[currSec.startDir].position + currSec.initialPosition;
-        currSec.endTip.transform.localEulerAngles = _tipDirTable[to].rotation;
-        currSec.endTip.transform.localPosition = _tipDirTable[to].position + currSec.initialPosition;
+        currSec.startTip.transform.localEulerAngles = TipDirTable[currSec.startDir].rotation;
+        currSec.startTip.transform.localPosition = TipDirTable[currSec.startDir].position + currSec.initialPosition;
+        currSec.endTip.transform.localEulerAngles = TipDirTable[to].rotation;
+        currSec.endTip.transform.localPosition = TipDirTable[to].position + currSec.initialPosition;
         
         currSec.endDir = to;
     }
