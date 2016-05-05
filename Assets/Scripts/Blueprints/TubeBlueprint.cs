@@ -26,18 +26,30 @@ public class TubeBlueprint : Blueprint
         {
             _currTip = other.gameObject;
             TubesTip tipScript = _currTip.GetComponent<TubesTip>();
-            Debug.Log(_currTip.transform.localEulerAngles);
-            GridManager.Direction reverse = GridManager.instance.OppositeDir(tipScript.direction);
-            int dirValue = (int)tipScript.direction;
-            if (dirValue > 3) dirValue = 7 - dirValue;
-            Vector2 desiredDirection = new Vector2(dirValue, 7 - dirValue);
-            _body.transform.localEulerAngles = Tube.BodyDirTable[desiredDirection].rotation;
-            _tip1.transform.localEulerAngles = Tube.TipDirTable[tipScript.direction].rotation;
-            _tip1.transform.localPosition = Tube.TipDirTable[tipScript.direction].position;
-            _tip2.transform.localEulerAngles = Tube.TipDirTable[reverse].rotation;
-            _tip2.transform.localPosition = Tube.TipDirTable[reverse].position;
-            _tip2.SetActive(false);
-            SetEnableToBuild(true);
+            if(tipScript.GetTipType() != TubesTip.TubeTipType.Conection)
+            {
+                GridManager.Direction reverse = GridManager.instance.OppositeDir(tipScript.direction);
+                int dirValue = (int)tipScript.direction;
+                if (dirValue > 3) dirValue = 7 - dirValue;
+                Vector2 desiredDirection = new Vector2(dirValue, 7 - dirValue);
+                _body.transform.localEulerAngles = Tube.BodyDirTable[desiredDirection].rotation;
+                _tip1.transform.localEulerAngles = Tube.TipDirTable[tipScript.direction].rotation;
+                _tip1.transform.localPosition = Tube.TipDirTable[tipScript.direction].position;
+                _tip2.transform.localEulerAngles = Tube.TipDirTable[reverse].rotation;
+                _tip2.transform.localPosition = Tube.TipDirTable[reverse].position;
+                _tip2.SetActive(false);
+                SetEnableToBuild(true);
+            }
+            else
+            {
+                //TODO
+                if (_isEnableToBuild)
+                {
+                    _currTip = null;
+                    _tip2.SetActive(true);
+                    SetEnableToBuild(false);
+                }
+            }
         }
     }
 
@@ -55,7 +67,6 @@ public class TubeBlueprint : Blueprint
     {
         if (_currTip && _currTip.activeSelf)
         {
-            Debug.Log("Trying to extend a tube");
             _currTip.SendMessage("CreateTube");
         }
     }

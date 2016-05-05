@@ -3,10 +3,11 @@ using System.Collections;
 
 public class Blueprint : MonoBehaviour
 {
+    protected bool _isEnableToBuild;
 
 	// Use this for initialization
 	void Start () {
-	
+        _isEnableToBuild = false;
 	}
 	
 	// Update is called once per frame
@@ -16,6 +17,7 @@ public class Blueprint : MonoBehaviour
 
     protected void SetEnableToBuild(bool value)
     {
+        _isEnableToBuild = value;
         for(int i = 0; i < transform.childCount; i++)
         {
             var child = transform.GetChild(i);

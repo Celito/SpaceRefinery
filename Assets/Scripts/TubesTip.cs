@@ -25,6 +25,8 @@ public class TubesTip : MonoBehaviour
 
     private Tube _parentTube;
 
+    private List<Tube> _possibleTubeConections;
+
     private TubeTipType _type = TubeTipType.Start;
 
     void Start()
@@ -47,6 +49,8 @@ public class TubesTip : MonoBehaviour
             }
         }
 
+        _possibleTubeConections = new List<Tube>();
+
         _meshRenderer = GetComponent<MeshRenderer>();
 
         _initialPos = transform.localPosition - PositionAdjustment(direction);
@@ -65,7 +69,6 @@ public class TubesTip : MonoBehaviour
     {
         if(_type == TubeTipType.Start)
         {
-            Debug.Log("Creating a tube");
             var endTube = Instantiate(GridManager.instance.Tube4);
             endTube.transform.position = _parentPOI.transform.position + _initialPos +
                 (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
@@ -79,14 +82,18 @@ public class TubesTip : MonoBehaviour
         }
         else if(_type == TubeTipType.Extension)
         {
-            Debug.Log("Extending a tube");
             _parentTube.ExtendTube(direction);
         }
     }
 
-    public void SetType(TubeTipType type)
+    public void SetTipType(TubeTipType type)
     {
         _type = type;
+    }
+
+    public TubeTipType GetTipType()
+    {
+        return _type;
     }
 
     public void SetParentTube(Tube parentTube)
@@ -137,6 +144,24 @@ public class TubesTip : MonoBehaviour
                 break;
         }
         this.direction = direction;
+    }
+
+    public void AddPossibleConnection(Tube tube)
+    {
+        if(!_possibleTubeConections.Contains(tube))
+        {
+            _possibleTubeConections.Add(tube);
+            SetTipType(TubeTipType.Conection);
+        }
+    }
+
+    public void RemovePossibleConnection(Tube tube)
+    {
+        _possibleTubeConections.Remove(tube);
+        if(_possibleTubeConections.Count == 0)
+        {
+            SetTipType(_parentTube == null ? TubeTipType.Start : TubeTipType.Extension);
+        }
     }
 
     private Vector3 PositionAdjustment(GridManager.Direction dir)
