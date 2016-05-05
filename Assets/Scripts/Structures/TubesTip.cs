@@ -19,6 +19,7 @@ public class TubesTip : MonoBehaviour
     public Material highlightedMaterial;
 
     private PointOfInterest _parentPOI;
+    private Structure _parentStructure;
     private MeshRenderer _meshRenderer;
     private bool _buildingStarted = false;
     private Vector3 _initialPos;
@@ -49,6 +50,8 @@ public class TubesTip : MonoBehaviour
             }
         }
 
+        _parentStructure = transform.parent.GetComponent<Structure>();
+
         _possibleTubeConections = new List<Tube>();
 
         _meshRenderer = GetComponent<MeshRenderer>();
@@ -76,6 +79,10 @@ public class TubesTip : MonoBehaviour
             endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
             endTubeScript.endDirection = direction;
             endTubeScript.CreateExtensionTips();
+            if (_parentStructure)
+            {
+                endTubeScript.AddConnectedStructure(_parentStructure);
+            }
             gameObject.SetActive(false);
             _buildingStarted = false;
             if (OnTubeCreated != null) OnTubeCreated(endTubeScript);

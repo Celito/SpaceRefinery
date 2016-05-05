@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Generic;
 
-public class Output : MonoBehaviour
+public class Output : Structure
 {
     public GameObject tipRef;
 

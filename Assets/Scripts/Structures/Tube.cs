@@ -22,8 +22,8 @@ public class Tube : MonoBehaviour
 
     private List<SectionInfo> _sections;
     private Vector3 _globalEndPosition;
-
-    private List<TubesTip> _currConnections;
+    private List<TubesTip> _currPossibleConnections;
+    private List<Structure> _connectedStructures;
 
     private static int uniqueTubeIdIter = 0;
 
@@ -84,7 +84,7 @@ public class Tube : MonoBehaviour
         _connection1 = transform.FindChild("Connection1").gameObject;
         _connection2 = transform.FindChild("Connection2").gameObject;
         _sections = new List<SectionInfo>();
-        _currConnections = new List<TubesTip>();
+        _currPossibleConnections = new List<TubesTip>();
         _sections.Add(
             new SectionInfo {
                 length = 1, startDir = startDirection, endDir = endDirection,
@@ -102,14 +102,19 @@ public class Tube : MonoBehaviour
         _globalEndPosition = new Vector3();
     }
 
+    public void AddConnectedStructure(Structure connectedStructure)
+    {
+        _connectedStructures.Add(connectedStructure);
+    }
+
     public void ExtendTube(GridManager.Direction dir)
     {
         // Unmark the conections not maded and clear the curr conection tips list;
-        foreach (var connectionTip in _currConnections)
+        foreach (var connectionTip in _currPossibleConnections)
         {
             connectionTip.RemovePossibleConnection(this);
         }
-        _currConnections.Clear();
+        _currPossibleConnections.Clear();
 
         var currSec = _sections[_sections.Count - 1];
         if (endDirection != dir)
@@ -180,7 +185,7 @@ public class Tube : MonoBehaviour
                 GameObject hitObject = hitInfo.collider.gameObject;
                 TubesTip tubesTip = hitObject.GetComponent<TubesTip>();
                 tubesTip.AddPossibleConnection(this);
-                _currConnections.Add(tubesTip);
+                _currPossibleConnections.Add(tubesTip);
                 Debug.Log("Found a tubes tip for " + name + " from " + tubesTip.name);
             }
         }
@@ -217,7 +222,7 @@ public class Tube : MonoBehaviour
                 GameObject hitObject = hitInfo.collider.gameObject;
                 TubesTip tubesTip = hitObject.GetComponent<TubesTip>();
                 tubesTip.AddPossibleConnection(this);
-                _currConnections.Add(tubesTip);
+                _currPossibleConnections.Add(tubesTip);
             }
         }
     }
