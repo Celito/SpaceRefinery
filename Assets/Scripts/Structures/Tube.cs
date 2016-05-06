@@ -12,7 +12,6 @@ public class Tube : MonoBehaviour
     private GameObject _body;
     private GameObject _connection1;
     private GameObject _connection2;
-    private BoxCollider _boxCollider;
 
     private List<TubesTip> _extensionTips;
 
@@ -24,6 +23,7 @@ public class Tube : MonoBehaviour
     private Vector3 _globalEndPosition;
     private List<TubesTip> _currPossibleConnections;
     private List<Structure> _connectedStructures;
+    private List<BoxCollider> _colliders;
 
     private static int uniqueTubeIdIter = 0;
 
@@ -90,8 +90,9 @@ public class Tube : MonoBehaviour
                 length = 1, startDir = startDirection, endDir = endDirection,
                 body = _body, startTip = _connection1, endTip = _connection2, initialPosition = Vector3.zero }
         );
-        _boxCollider = GetComponent<BoxCollider>();
         name = "Tube" + uniqueTubeIdIter++;
+        _connectedStructures = new List<Structure>();
+        _colliders = new List<BoxCollider>();
     }
 
     void Start ()
@@ -100,6 +101,7 @@ public class Tube : MonoBehaviour
         startSection.startDir = startDirection;
         SetSectionDirection(0, endDirection);
         _globalEndPosition = new Vector3();
+        _colliders.Add(GetComponent<BoxCollider>());
     }
 
     public void AddConnectedStructure(Structure connectedStructure)
@@ -117,23 +119,42 @@ public class Tube : MonoBehaviour
         _currPossibleConnections.Clear();
 
         var currSec = _sections[_sections.Count - 1];
+        var directionInc = GridManager.DirectionIncrement(dir);
+
+        // resposition the global end position
+        _globalEndPosition += directionInc;
+
         if (endDirection != dir)
         {
             // bend the current section in the new direction;
             SetSectionDirection(_sections.Count - 1, dir);
+
+
+            var lastCollider = _colliders[_colliders.Count - 1];
+            if(lastCollider.size.x > 1 || lastCollider.size.y > 1 || lastCollider.size.z > 1)
+            {
+                // add a new box collider
+                var boxCollider = gameObject.AddComponent<BoxCollider>();
+                boxCollider.center = _globalEndPosition;
+                _colliders.Add(boxCollider);
+            }
+            else
+            {
+                ExtendCollider(lastCollider, directionInc);
+            }
         }
         else
         {
-            // remove one of the length of the curr section and add a new curve section at the end;
+            // TODO: remove one of the length of the curr section and add a new curve section at the end;
             // set this new section as the current one;
+
+            // extend the current last collider;
+            ExtendCollider(_colliders[_colliders.Count - 1], directionInc);
         }
 
         //finish the current section and add the new sections;
         CreateNewSection(dir);
         endDirection = dir;
-
-        // resposition the global end position
-        _globalEndPosition += GridManager.DirectionIncrement(dir);
 
         // change the extension tips position, destroi and create new ones if necessary
         for(int dirIndex = 1; dirIndex < 7; dirIndex++)
@@ -189,6 +210,12 @@ public class Tube : MonoBehaviour
                 Debug.Log("Found a tubes tip for " + name + " from " + tubesTip.name);
             }
         }
+    }
+
+    private void ExtendCollider(BoxCollider collider, Vector3 sizeIncrement)
+    {
+        collider.center += sizeIncrement / 2;
+        collider.size += new Vector3(Mathf.Abs(sizeIncrement.x), Mathf.Abs(sizeIncrement.y), Mathf.Abs(sizeIncrement.z));
     }
 
     public void CreateExtensionTips()
@@ -260,8 +287,6 @@ public class Tube : MonoBehaviour
         var directionVector = GridManager.DirectionIncrement(endDirection);
         var sizeVector = directionVector * (size - 1);
         sizeVector = new Vector3(Mathf.Abs(sizeVector.x), Mathf.Abs(sizeVector.y), Mathf.Abs(sizeVector.z));
-        _boxCollider.size = (Vector3.one) + sizeVector;
-        _boxCollider.center = directionVector * boxDistance;
         _connection2.SetActive(size == 0);
         _size = size;
     }
