@@ -7,7 +7,7 @@ public class TubesTip : MonoBehaviour
     {
         Start,
         Extension,
-        Conection
+        Connection
     }
 
     public delegate void TubeCreated(Tube tube);
@@ -26,7 +26,7 @@ public class TubesTip : MonoBehaviour
 
     private Tube _parentTube;
 
-    private List<Tube> _possibleTubeConections;
+    private List<KeyValuePair<GridManager.Direction,Tube>> _possibleTubeConections;
 
     private TubeTipType _type = TubeTipType.Start;
 
@@ -52,7 +52,7 @@ public class TubesTip : MonoBehaviour
 
         _parentStructure = transform.parent.GetComponent<Structure>();
 
-        _possibleTubeConections = new List<Tube>();
+        _possibleTubeConections = new List<KeyValuePair<GridManager.Direction, Tube>>();
 
         _meshRenderer = GetComponent<MeshRenderer>();
 
@@ -68,7 +68,7 @@ public class TubesTip : MonoBehaviour
         }
     }
 
-    public void CreateTube()
+    public void CreateTube(int connectionIndex = 0)
     {
         if(_type == TubeTipType.Start)
         {
@@ -91,6 +91,24 @@ public class TubesTip : MonoBehaviour
         {
             _parentTube.ExtendTube(direction);
         }
+        else /* _type == TubeTipType.Connection */
+        {
+            var connectionEntry = _possibleTubeConections[connectionIndex % _possibleTubeConections.Count];
+            var connectionTube = connectionEntry.Value;
+            var connectionDirection = connectionEntry.Key;
+            if (_parentTube == null)
+            {
+                connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
+                connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
+                connectionTube.AddConnectedStructure(_parentStructure);
+                // Delete the current tip;
+                Destroy(gameObject);
+            }
+            else
+            {
+                // TODO: Combine the two tubes into one;
+            }
+        }
     }
 
     public void SetTipType(TubeTipType type)
@@ -101,6 +119,15 @@ public class TubesTip : MonoBehaviour
     public TubeTipType GetTipType()
     {
         return _type;
+    }
+
+    public GridManager.Direction GetPossibleConnectionDirection(int index = 0)
+    {
+        if(_possibleTubeConections.Count > 0)
+        {
+            return _possibleTubeConections[index % _possibleTubeConections.Count].Key;
+        }
+        return 0;
     }
 
     public void SetParentTube(Tube parentTube)
@@ -153,18 +180,25 @@ public class TubesTip : MonoBehaviour
         this.direction = direction;
     }
 
-    public void AddPossibleConnection(Tube tube)
+    public void AddPossibleConnection(KeyValuePair<GridManager.Direction, Tube> directionAndTube)
     {
-        if(!_possibleTubeConections.Contains(tube))
+        if(!_possibleTubeConections.Contains(directionAndTube))
         {
-            _possibleTubeConections.Add(tube);
-            SetTipType(TubeTipType.Conection);
+            _possibleTubeConections.Add(directionAndTube);
+            SetTipType(TubeTipType.Connection);
         }
     }
 
     public void RemovePossibleConnection(Tube tube)
     {
-        _possibleTubeConections.Remove(tube);
+        foreach(var pair in _possibleTubeConections)
+        {
+            if(pair.Value == tube)
+            {
+                _possibleTubeConections.Remove(pair);
+                break;
+            }
+        }
         if(_possibleTubeConections.Count == 0)
         {
             SetTipType(_parentTube == null ? TubeTipType.Start : TubeTipType.Extension);

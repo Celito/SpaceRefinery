@@ -107,9 +107,25 @@ public class Tube : MonoBehaviour
     public void AddConnectedStructure(Structure connectedStructure)
     {
         _connectedStructures.Add(connectedStructure);
+        if(_connectedStructures.Count == 2)
+        {
+            // Remove all possible connections and tips;
+            RemoveAllCurrPossibleConnections();
+            for (int dirIndex = 1; dirIndex < 7; dirIndex++)
+            {
+                var extensionTip = _extensionTips[dirIndex - 1];
+                if (extensionTip != null)
+                {
+                    Destroy(extensionTip.gameObject);
+                    _extensionTips[dirIndex - 1] = null;
+                }
+            }
+
+            // TODO: Set the tube as active, he can start to be updated;
+        }
     }
 
-    public void ExtendTube(GridManager.Direction dir)
+    private void RemoveAllCurrPossibleConnections()
     {
         // Unmark the conections not maded and clear the curr conection tips list;
         foreach (var connectionTip in _currPossibleConnections)
@@ -117,6 +133,11 @@ public class Tube : MonoBehaviour
             connectionTip.RemovePossibleConnection(this);
         }
         _currPossibleConnections.Clear();
+    }
+
+    public void ExtendTube(GridManager.Direction dir)
+    {
+        RemoveAllCurrPossibleConnections();
 
         var currSec = _sections[_sections.Count - 1];
         var directionInc = GridManager.DirectionIncrement(dir);
@@ -205,7 +226,8 @@ public class Tube : MonoBehaviour
             {
                 GameObject hitObject = hitInfo.collider.gameObject;
                 TubesTip tubesTip = hitObject.GetComponent<TubesTip>();
-                tubesTip.AddPossibleConnection(this);
+                var reverseCurDirection = GridManager.instance.OppositeDir(curDirection);
+                tubesTip.AddPossibleConnection(new KeyValuePair<GridManager.Direction, Tube>(reverseCurDirection, this));
                 _currPossibleConnections.Add(tubesTip);
                 Debug.Log("Found a tubes tip for " + name + " from " + tubesTip.name);
             }
@@ -248,7 +270,8 @@ public class Tube : MonoBehaviour
             {
                 GameObject hitObject = hitInfo.collider.gameObject;
                 TubesTip tubesTip = hitObject.GetComponent<TubesTip>();
-                tubesTip.AddPossibleConnection(this);
+                GridManager.Direction reverseDirection = GridManager.instance.OppositeDir(direction);
+                tubesTip.AddPossibleConnection(new KeyValuePair<GridManager.Direction, Tube>(reverseDirection, this));
                 _currPossibleConnections.Add(tubesTip);
             }
         }
@@ -291,6 +314,11 @@ public class Tube : MonoBehaviour
         _size = size;
     }
     
+    public void SetTipDirection(GridManager.Direction to)
+    {
+        SetSectionDirection(_sections.Count - 1, to);
+    }
+
     public void SetSectionDirection(int sectionId, GridManager.Direction to)
     {
         var currSec = _sections[sectionId];
