@@ -8,5 +8,6 @@ public class Reservoir : Structure
         base.VirtualStart();
         Opened = true;
         Capacity = 700.0;
+        MaxInputFlow = 40.0;
     }
 }

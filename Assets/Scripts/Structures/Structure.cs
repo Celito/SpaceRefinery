@@ -49,7 +49,7 @@ public class Structure : MonoBehaviour {
     {
         foreach (var connection in _connectedStructures)
         {
-            if (connection.CurrPresure < CurrPresure && connection.Opened)
+            if (connection.CurrPresure - CurrPresure < -0.005 && connection.Opened)
             {
                 var outputFlow = MaxInputFlow * deltaTime * CurrPresure;
                 if (outputFlow > CurrLoad) outputFlow = CurrLoad;

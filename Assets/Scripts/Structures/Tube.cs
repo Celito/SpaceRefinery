@@ -99,7 +99,7 @@ public class Tube : Structure
         name = "Tube" + uniqueTubeIdIter++;
         _colliders = new List<BoxCollider>();
 
-        MaxInputFlow = 10;
+        MaxInputFlow = 40.0;
     }
 
     override protected void VirtualStart()

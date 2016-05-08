@@ -22,7 +22,8 @@ public class Output : Structure
         }
         Opened = true;
         CurrPresure = 1;
-	}
+        MaxInputFlow = 40;
+    }
 
     override public void ConnectTo(Structure connectedStructure)
     {
@@ -32,7 +33,7 @@ public class Output : Structure
     public override void ProcessFlow(double deltaTime)
     {
         //TODO: remove this hard coded value
-        var outputFlow = deltaTime * 10.0;
+        var outputFlow = deltaTime * MaxInputFlow;
         foreach(var connection in _connectedStructures)
         {
             if(connection.CurrPresure < CurrPresure && connection.Opened)
