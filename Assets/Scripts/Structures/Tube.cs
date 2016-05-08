@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 
-public class Tube : MonoBehaviour
+public class Tube : Structure
 {
 
     public GridManager.Direction startDirection = GridManager.Direction.FRONT;
@@ -22,7 +22,6 @@ public class Tube : MonoBehaviour
     private List<SectionInfo> _sections;
     private Vector3 _globalEndPosition;
     private List<TubesTip> _currPossibleConnections;
-    private List<Structure> _connectedStructures;
     private List<BoxCollider> _colliders;
 
     private static int uniqueTubeIdIter = 0;
@@ -65,7 +64,7 @@ public class Tube : MonoBehaviour
         { new Vector2(5, 6), new DirectionInfo { id = 10, rotation = new Vector3( 90, 180,   0) } }
     };
 
-    public static Dictionary<GridManager.Direction, DirectionInfo> TipDirTable = 
+    public static Dictionary<GridManager.Direction, DirectionInfo> TipDirTable =
         new Dictionary<GridManager.Direction, DirectionInfo>()
     {
         { GridManager.Direction.BOTTOM, new DirectionInfo { id = 1, rotation = new Vector3( 90,  0,  0), position = new Vector3( 0, -.5f, 0)} },
@@ -78,7 +77,7 @@ public class Tube : MonoBehaviour
 
 
     // Use this for initialization
-    void Awake ()
+    override protected void VirtualAwake()
     {
         _body = transform.FindChild("Body").gameObject;
         _connection1 = transform.FindChild("Connection1").gameObject;
@@ -86,28 +85,37 @@ public class Tube : MonoBehaviour
         _sections = new List<SectionInfo>();
         _currPossibleConnections = new List<TubesTip>();
         _sections.Add(
-            new SectionInfo {
-                length = 1, startDir = startDirection, endDir = endDirection,
-                body = _body, startTip = _connection1, endTip = _connection2, initialPosition = Vector3.zero }
+            new SectionInfo
+            {
+                length = 1,
+                startDir = startDirection,
+                endDir = endDirection,
+                body = _body,
+                startTip = _connection1,
+                endTip = _connection2,
+                initialPosition = Vector3.zero
+            }
         );
         name = "Tube" + uniqueTubeIdIter++;
-        _connectedStructures = new List<Structure>();
         _colliders = new List<BoxCollider>();
+
+        MaxInputFlow = 10;
     }
 
-    void Start ()
-    {   
+    override protected void VirtualStart()
+    {
         var startSection = _sections[0];
         startSection.startDir = startDirection;
         SetSectionDirection(0, endDirection);
         _globalEndPosition = new Vector3();
         _colliders.Add(GetComponent<BoxCollider>());
+        Capacity = 10.0;
     }
 
-    public void AddConnectedStructure(Structure connectedStructure)
+    override public void ConnectTo(Structure connectedStructure)
     {
-        _connectedStructures.Add(connectedStructure);
-        if(_connectedStructures.Count == 2)
+        base.ConnectTo(connectedStructure);
+        if (_connectedStructures.Count == 2)
         {
             // Remove all possible connections and tips;
             RemoveAllCurrPossibleConnections();
@@ -122,6 +130,7 @@ public class Tube : MonoBehaviour
             }
 
             // TODO: Set the tube as active, he can start to be updated;
+            Opened = true;
         }
     }
 
@@ -145,6 +154,8 @@ public class Tube : MonoBehaviour
         // resposition the global end position
         _globalEndPosition += directionInc;
 
+        Capacity += 10.0;
+
         if (endDirection != dir)
         {
             // bend the current section in the new direction;
@@ -152,7 +163,7 @@ public class Tube : MonoBehaviour
 
 
             var lastCollider = _colliders[_colliders.Count - 1];
-            if(lastCollider.size.x > 1 || lastCollider.size.y > 1 || lastCollider.size.z > 1)
+            if (lastCollider.size.x > 1 || lastCollider.size.y > 1 || lastCollider.size.z > 1)
             {
                 // add a new box collider
                 var boxCollider = gameObject.AddComponent<BoxCollider>();
@@ -178,15 +189,15 @@ public class Tube : MonoBehaviour
         endDirection = dir;
 
         // change the extension tips position, destroi and create new ones if necessary
-        for(int dirIndex = 1; dirIndex < 7; dirIndex++)
+        for (int dirIndex = 1; dirIndex < 7; dirIndex++)
         {
             var extensionTip = _extensionTips[dirIndex - 1];
             GridManager.Direction curDirection = (GridManager.Direction)dirIndex;
             GridManager.Direction reverseDirection = GridManager.instance.OppositeDir(dir);
             // if the tip is in the reverse direction  just ignore it or delete the existing one of that direction
-            if(reverseDirection == curDirection)
+            if (reverseDirection == curDirection)
             {
-                if(extensionTip != null)
+                if (extensionTip != null)
                 {
                     // remove the reverse tip
                     DestroyImmediate(extensionTip.gameObject);
@@ -202,7 +213,7 @@ public class Tube : MonoBehaviour
             {
                 extensionTip.MoveTo(relativeTubesEnd);
             }
-            else if(extensionTip == null && !hitSomething)
+            else if (extensionTip == null && !hitSomething)
             {
                 // create new extension tip
                 var tip = Instantiate(GridManager.instance.TubesTip);
@@ -211,10 +222,10 @@ public class Tube : MonoBehaviour
                 tipScript.MoveTo(GetTubesEndPosition());
                 tipScript.SetDirection(curDirection);
                 tipScript.SetTipType(TubesTip.TubeTipType.Extension);
-                tipScript.SetParentTube(this);
+                tipScript.SetParentStructure(this);
                 tipScript.name = name + "Tip" + dirIndex;
                 _extensionTips[dirIndex - 1] = tipScript;
-            } 
+            }
             else if (extensionTip != null && hitSomething)
             {
                 // remove tip
@@ -229,7 +240,6 @@ public class Tube : MonoBehaviour
                 var reverseCurDirection = GridManager.instance.OppositeDir(curDirection);
                 tubesTip.AddPossibleConnection(new KeyValuePair<GridManager.Direction, Tube>(reverseCurDirection, this));
                 _currPossibleConnections.Add(tubesTip);
-                Debug.Log("Found a tubes tip for " + name + " from " + tubesTip.name);
             }
         }
     }
@@ -258,7 +268,7 @@ public class Tube : MonoBehaviour
                 tipScript.SetDirection(direction);
                 tipScript.name = name + "Tip" + dirIndex;
                 tipScript.SetTipType(TubesTip.TubeTipType.Extension);
-                tipScript.SetParentTube(this);
+                tipScript.SetParentStructure(this);
                 _extensionTips.Add(tipScript);
             }
             else
@@ -313,7 +323,7 @@ public class Tube : MonoBehaviour
         _connection2.SetActive(size == 0);
         _size = size;
     }
-    
+
     public void SetTipDirection(GridManager.Direction to)
     {
         SetSectionDirection(_sections.Count - 1, to);
@@ -355,13 +365,13 @@ public class Tube : MonoBehaviour
         currSec.startTip.transform.localPosition = TipDirTable[currSec.startDir].position + currSec.initialPosition;
         currSec.endTip.transform.localEulerAngles = TipDirTable[to].rotation;
         currSec.endTip.transform.localPosition = TipDirTable[to].position + currSec.initialPosition;
-        
+
         currSec.endDir = to;
     }
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
-	
-	}
+
+    }
 }

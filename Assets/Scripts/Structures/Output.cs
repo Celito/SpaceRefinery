@@ -7,14 +7,10 @@ public class Output : Structure
     public GameObject tipRef;
 
     private List<TubesTip> _initialPipeTips;
-    //private PointOfInterest _poi;
 
     // Use this for initialization
-    void Start ()
+    override protected void VirtualStart ()
     {
-        //_poi = GetComponent<PointOfInterest>();
-        //_poi.OnSelected += onSelected;
-        //_poi.OnDeselected += onDeselected;
         _initialPipeTips = new List<TubesTip>();
         for(int i = 0; i < transform.childCount; i++)
         {
@@ -22,25 +18,34 @@ public class Output : Structure
             if (childrenTip)
             {
                 _initialPipeTips.Add(childrenTip);
-                //childrenTip.gameObject.SetActive(false);
             }
         }
-
+        Opened = true;
+        CurrPresure = 1;
 	}
 
-    void onSelected()
+    override public void ConnectTo(Structure connectedStructure)
     {
-        foreach(TubesTip tip in _initialPipeTips)
+        base.ConnectTo(connectedStructure);
+    }
+
+    public override void ProcessFlow(double deltaTime)
+    {
+        //TODO: remove this hard coded value
+        var outputFlow = deltaTime * 10.0;
+        foreach(var connection in _connectedStructures)
         {
-            //tip.gameObject.SetActive(true);
+            if(connection.CurrPresure < CurrPresure && connection.Opened)
+            {
+                connection.ReceiveFlow(outputFlow, deltaTime, this);
+            }
         }
     }
 
-    void onDeselected()
+
+    public override double ReceiveFlow(double flow, double deltaTime, Structure sender)
     {
-        foreach (TubesTip tip in _initialPipeTips)
-        {
-            //tip.gameObject.SetActive(false);
-        }
+        // can't receive anything
+        return 0.0;
     }
 }

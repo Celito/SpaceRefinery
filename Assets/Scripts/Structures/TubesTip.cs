@@ -18,13 +18,10 @@ public class TubesTip : MonoBehaviour
     public Material normalMaterial;
     public Material highlightedMaterial;
 
-    private PointOfInterest _parentPOI;
     private Structure _parentStructure;
     private MeshRenderer _meshRenderer;
     private bool _buildingStarted = false;
     private Vector3 _initialPos;
-
-    private Tube _parentTube;
 
     private List<KeyValuePair<GridManager.Direction,Tube>> _possibleTubeConections;
 
@@ -32,25 +29,24 @@ public class TubesTip : MonoBehaviour
 
     void Start()
     {
-        bool poiParentFound = false;
+        bool structureParentFound = _parentStructure != null;
         var curParent = transform;
-        while(!poiParentFound)
+        while(!structureParentFound)
         {
             curParent = curParent.parent;
             if(curParent == null)
             {
-                Debug.LogError("Missing a POI parent for a tubes begining");
+                Debug.LogError("Missing a structure parent for a tubes begining");
                 Debug.Break();
             }
             var parentGameObject = curParent.gameObject;
-            _parentPOI = parentGameObject.GetComponent<PointOfInterest>();
-            if (_parentPOI)
+
+            _parentStructure = parentGameObject.GetComponent<Structure>();
+            if (_parentStructure)
             {
-                poiParentFound = true;
+                structureParentFound = true;
             }
         }
-
-        _parentStructure = transform.parent.GetComponent<Structure>();
 
         _possibleTubeConections = new List<KeyValuePair<GridManager.Direction, Tube>>();
 
@@ -73,7 +69,7 @@ public class TubesTip : MonoBehaviour
         if(_type == TubeTipType.Start)
         {
             var endTube = Instantiate(GridManager.instance.Tube4);
-            endTube.transform.position = _parentPOI.transform.position + _initialPos +
+            endTube.transform.position = _parentStructure.transform.position + _initialPos +
                 (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
             Tube endTubeScript = endTube.GetComponent<Tube>();
             endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
@@ -81,7 +77,7 @@ public class TubesTip : MonoBehaviour
             endTubeScript.CreateExtensionTips();
             if (_parentStructure)
             {
-                endTubeScript.AddConnectedStructure(_parentStructure);
+                endTubeScript.ConnectTo(_parentStructure);
             }
             gameObject.SetActive(false);
             _buildingStarted = false;
@@ -89,24 +85,24 @@ public class TubesTip : MonoBehaviour
         }
         else if(_type == TubeTipType.Extension)
         {
-            _parentTube.ExtendTube(direction);
+            (_parentStructure as Tube).ExtendTube(direction);
         }
         else /* _type == TubeTipType.Connection */
         {
             var connectionEntry = _possibleTubeConections[connectionIndex % _possibleTubeConections.Count];
             var connectionTube = connectionEntry.Value;
             var connectionDirection = connectionEntry.Key;
-            if (_parentTube == null)
+            if (_parentStructure is Tube)
             {
-                connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
-                connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
-                connectionTube.AddConnectedStructure(_parentStructure);
-                // Delete the current tip;
-                Destroy(gameObject);
+                // TODO: Combine the two tubes into one;
             }
             else
             {
-                // TODO: Combine the two tubes into one;
+                connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
+                connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
+                connectionTube.ConnectTo(_parentStructure);
+                // Delete the current tip;
+                Destroy(gameObject);
             }
         }
     }
@@ -130,9 +126,9 @@ public class TubesTip : MonoBehaviour
         return 0;
     }
 
-    public void SetParentTube(Tube parentTube)
+    public void SetParentStructure(Structure parent)
     {
-        _parentTube = parentTube;
+        _parentStructure = parent;
     }
 
     void OnMouseReleasedProjection(int projectionId)
@@ -201,7 +197,7 @@ public class TubesTip : MonoBehaviour
         }
         if(_possibleTubeConections.Count == 0)
         {
-            SetTipType(_parentTube == null ? TubeTipType.Start : TubeTipType.Extension);
+            SetTipType(_parentStructure is Tube ? TubeTipType.Extension : TubeTipType.Start);
         }
     }
 
