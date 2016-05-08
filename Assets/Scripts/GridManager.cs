@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections.Generic;
 
 public class GridManager : MonoBehaviour
@@ -49,17 +50,24 @@ public class GridManager : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
     {
+        // Move the selected construction part to where the mouse is on the grid
 	    if(SelectedConstructionPart)
         {
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit raycastHit;
-            if (MovementPlaneMeshCollider.Raycast(ray, out raycastHit, 10000))
+            if (!EventSystem.current.IsPointerOverGameObject() && 
+                MovementPlaneMeshCollider.Raycast(ray, out raycastHit, 10000))
             {
+                SelectedConstructionPart.SetActive(true);
                 Vector3 hitPoint = raycastHit.point;
                 hitPoint.x = Mathf.Round(hitPoint.x);
                 hitPoint.z = Mathf.Round(hitPoint.z);
                 hitPoint.y = MainCamera.instance.cameraBoom.transform.position.y;
                 SelectedConstructionPart.SendMessage("MoveBlueprintTo", hitPoint);
+            }
+            else
+            {
+                SelectedConstructionPart.SetActive(false);
             }
         }
         
