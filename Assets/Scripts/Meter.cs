@@ -4,7 +4,7 @@ using System.Collections;
 public class Meter : MonoBehaviour {
 
     private GameObject _content;
-    private Structure _parentStructure;
+    private OldStructure _parentStructure;
 
 	// Use this for initialization
 	void Start () {
@@ -21,7 +21,7 @@ public class Meter : MonoBehaviour {
             }
             var parentGameObject = curParent.gameObject;
 
-            _parentStructure = parentGameObject.GetComponent<Structure>();
+            _parentStructure = parentGameObject.GetComponent<OldStructure>();
             if (_parentStructure)
             {
                 structureParentFound = true;

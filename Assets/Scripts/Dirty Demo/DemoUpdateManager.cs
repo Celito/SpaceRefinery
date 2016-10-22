@@ -9,12 +9,12 @@ public class DemoUpdateManager : MonoBehaviour
 
 	public float frequency = 0.5f;
 	
-	private List<DemoStructure> _structures = new List<DemoStructure>();
-	private List<DemoStructure> _endPoints = new List<DemoStructure>();
+	private List<Structure> _structures = new List<Structure>();
+	private List<Structure> _endPoints = new List<Structure>();
 
 	private float _timeAccumulator;
 
-	public void Register(DemoStructure structure)
+	public void Register(Structure structure)
 	{
 		_structures.Add(structure);
 
@@ -25,12 +25,12 @@ public class DemoUpdateManager : MonoBehaviour
 	{
 		_endPoints.Clear();
 
-		List<DemoStructure> searchedDemoStructures = new List<DemoStructure>();		
-		Queue<DemoStructure> pendingDemoStructures = new Queue<DemoStructure>();
+		List<Structure> searchedDemoStructures = new List<Structure>();		
+		Queue<Structure> pendingDemoStructures = new Queue<Structure>();
 
 		for(int i = 0; i < _structures.Count; ++i)
-		{			
-			if(_structures[i].inputs.Count == 0)
+		{
+			if(_structures[i].InputCount == 0)
 			{
 				pendingDemoStructures.Enqueue(_structures[i]);
 			}
@@ -40,14 +40,15 @@ public class DemoUpdateManager : MonoBehaviour
 
 		while(pendingDemoStructures.Count > 0)
 		{
-			DemoStructure current = pendingDemoStructures.Dequeue();
+			Structure current = pendingDemoStructures.Dequeue();
 
 			searchedDemoStructures.Add(current);
 
-			if(current.outputs.Count > 0)
+			if(current.OutputCount > 0)
 			{
-				foreach (DemoStructure potential in current.outputs)
+				for(int i = 0; i < current.OutputCount; i++)
 				{
+                    Structure potential = current.GetOutput(i);
 					if(searchedDemoStructures.IndexOf(potential) == -1)
 						pendingDemoStructures.Enqueue(potential);
 				}
@@ -57,8 +58,6 @@ public class DemoUpdateManager : MonoBehaviour
 				_endPoints.Add(current);
 			}
 		}
-
-		// Debug.Log("Found " + _endPoints.Count + " end points");
 	}
 
 	private void Awake()
@@ -79,10 +78,10 @@ public class DemoUpdateManager : MonoBehaviour
 			_timeAccumulator -= frequency;
 
 			// do update stuff
-			List<DemoStructure> visitedDemoStructures = new List<DemoStructure>(); // should be a dictionary for O(1) search time
-			Queue<DemoStructure> pendingDemoStructures = new Queue<DemoStructure>();
+			List<Structure> visitedDemoStructures = new List<Structure>(); // should be a dictionary for O(1) search time
+			Queue<Structure> pendingDemoStructures = new Queue<Structure>();
 
-			foreach (DemoStructure endPoint in _endPoints)
+			foreach (Structure endPoint in _endPoints)
 			{
 				pendingDemoStructures.Enqueue(endPoint);
 
@@ -91,12 +90,13 @@ public class DemoUpdateManager : MonoBehaviour
 
 			while(pendingDemoStructures.Count > 0)
 			{
-				DemoStructure structure = pendingDemoStructures.Dequeue();
+				Structure structure = pendingDemoStructures.Dequeue();
 
 				structure.Process();
 
-				foreach (DemoStructure input in structure.inputs)
+				for(int i = 0; i < structure.InputCount; i++)
 				{
+                    Structure input = structure.GetInput(i);
 					if (visitedDemoStructures.IndexOf(input) == -1)
 					{
 						pendingDemoStructures.Enqueue(input);

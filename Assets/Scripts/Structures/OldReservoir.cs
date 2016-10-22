@@ -1,7 +1,4 @@
-﻿using UnityEngine;
-using System.Collections;
-
-public class Reservoir : Structure
+﻿public class OldReservoir : OldStructure
 {
     protected override void VirtualStart()
     {

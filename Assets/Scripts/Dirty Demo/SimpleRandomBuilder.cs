@@ -71,10 +71,10 @@ public class SimpleRandomBuilder : MonoBehaviour // not really random at all :P
 
 	protected void Connect(GameObject input, GameObject output)
 	{
-		DemoStructure inputStructure = input.GetComponent<DemoStructure>();
-		DemoStructure outputStructure = output.GetComponent<DemoStructure>();
+		Structure inputStructure = input.GetComponent<Structure>();
+		Structure outputStructure = output.GetComponent<Structure>();
 
-		inputStructure.outputs.Add(outputStructure);
-		outputStructure.inputs.Add(inputStructure);
+		inputStructure.CreateOutputConnection(outputStructure);
+		outputStructure.CreateInputConnection(inputStructure);
 	}
 }

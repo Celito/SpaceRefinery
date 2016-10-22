@@ -9,12 +9,12 @@ public class UpdateManager : MonoBehaviour
 
 	public float frequency = 1.0f;
 	
-	private List<Structure> _structures = new List<Structure>();
-	private List<Structure> _endPoints = new List<Structure>();
+	private List<OldStructure> _structures = new List<OldStructure>();
+	private List<OldStructure> _endPoints = new List<OldStructure>();
 
 	private float _timeAccumulator;
 
-	public void Register(Structure structure)
+	public void Register(OldStructure structure)
 	{
 		_structures.Add(structure);
 
@@ -25,8 +25,8 @@ public class UpdateManager : MonoBehaviour
 	{
 		_endPoints.Clear();
 
-		List<Structure> searchedStructures = new List<Structure>();		
-		Queue<Structure> pendingStructures = new Queue<Structure>();
+		List<OldStructure> searchedStructures = new List<OldStructure>();		
+		Queue<OldStructure> pendingStructures = new Queue<OldStructure>();
 
 		for(int i = 0; i < _structures.Count; ++i)
 		{			
@@ -40,13 +40,13 @@ public class UpdateManager : MonoBehaviour
 
 		while(pendingStructures.Count > 0)
 		{
-			Structure current = pendingStructures.Dequeue();
+			OldStructure current = pendingStructures.Dequeue();
 
 			searchedStructures.Add(current);
 
 			if(current.outputStructures.Count > 0)
 			{
-				foreach (Structure potential in current.outputStructures)
+				foreach (OldStructure potential in current.outputStructures)
 				{
 					if(searchedStructures.IndexOf(potential) == -1)
 						pendingStructures.Enqueue(potential);

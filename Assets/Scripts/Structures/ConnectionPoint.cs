@@ -1,22 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-public class TubesTip : MonoBehaviour
+public class ConnectionPoint : MonoBehaviour
 {
-    public enum TubeTipType
+    public enum ConnectionPointType
     {
         Start,
         Extension,
         Connection
     }
 
-	public enum TipIOType
+	public enum ConnectionPointIOType
 	{
 		Input,
 		Output
 	}
 
-    public delegate void TubeCreated(Tube tube);
+    public delegate void TubeCreated(OldTube tube);
     public event TubeCreated OnTubeCreated;
     
     public GridManager.Direction direction = GridManager.Direction.BOTTOM;
@@ -24,16 +24,16 @@ public class TubesTip : MonoBehaviour
     public Material normalMaterial;
     public Material highlightedMaterial;
 
-	public TipIOType tipIOType = TipIOType.Input;
+	public ConnectionPointIOType ioType = ConnectionPointIOType.Input;
 
-    private Structure _parentStructure;
+    private OldStructure _parentStructure;
     private MeshRenderer _meshRenderer;
     private bool _buildingStarted = false;
     private Vector3 _initialPos;
 
-    private List<KeyValuePair<GridManager.Direction,Tube>> _possibleTubeConections;
+    private List<KeyValuePair<GridManager.Direction,OldTube>> _possibleTubeConections;
 
-    private TubeTipType _type = TubeTipType.Start;
+    private ConnectionPointType _type = ConnectionPointType.Start;
 
     void Start()
     {
@@ -49,14 +49,14 @@ public class TubesTip : MonoBehaviour
             }
             var parentGameObject = curParent.gameObject;
 
-            _parentStructure = parentGameObject.GetComponent<Structure>();
+            _parentStructure = parentGameObject.GetComponent<OldStructure>();
             if (_parentStructure)
             {
                 structureParentFound = true;
             }
         }
 
-        _possibleTubeConections = new List<KeyValuePair<GridManager.Direction, Tube>>();
+        _possibleTubeConections = new List<KeyValuePair<GridManager.Direction, OldTube>>();
 
         _meshRenderer = GetComponent<MeshRenderer>();
 
@@ -75,42 +75,42 @@ public class TubesTip : MonoBehaviour
     public void CreateTube(int connectionIndex = 0)
 	{
 
-		Debug.Log("CreateTube: " + tipIOType + " - " + connectionIndex);
+		Debug.Log("CreateTube: " + ioType + " - " + connectionIndex);
 
-        if(_type == TubeTipType.Start)
+        if(_type == ConnectionPointType.Start)
         {
             var endTube = Instantiate(GridManager.instance.Tube4);
             endTube.transform.position = _parentStructure.transform.position + _initialPos +
                 (GridManager.DirectionIncrement(direction) /* * (_selectedProjectionId + 1)*/);
-            Tube endTubeScript = endTube.GetComponent<Tube>();
+            OldTube endTubeScript = endTube.GetComponent<OldTube>();
             endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
             endTubeScript.endDirection = direction;
-            endTubeScript.CreateExtensionTips(tipIOType);
+            endTubeScript.CreateExtensionTips(ioType);
             if (_parentStructure)
             {
 
-				if (tipIOType == TipIOType.Input)
+				if (ioType == ConnectionPointIOType.Input)
 					endTubeScript.AddOutput(_parentStructure);
-				if (tipIOType == TipIOType.Output)
+				if (ioType == ConnectionPointIOType.Output)
 					endTubeScript.AddInput(_parentStructure);
             }
             gameObject.SetActive(false);
             _buildingStarted = false;
             if (OnTubeCreated != null) OnTubeCreated(endTubeScript);
         }
-        else if(_type == TubeTipType.Extension)
+        else if(_type == ConnectionPointType.Extension)
         {
-            (_parentStructure as Tube).ExtendTube(direction);
+            (_parentStructure as OldTube).ExtendTube(direction);
         }
         else /* _type == TubeTipType.Connection */
 		{
 
-			Debug.Log("Debug: " + tipIOType);
+			Debug.Log("Debug: " + ioType);
             var connectionEntry = _possibleTubeConections[connectionIndex % _possibleTubeConections.Count];
             var connectionTube = connectionEntry.Value;
             var connectionDirection = connectionEntry.Key;
 
-			if (_parentStructure is Tube)
+			if (_parentStructure is OldTube)
 			{
 				// TODO: Combine the two tubes into one;
 			}
@@ -119,9 +119,9 @@ public class TubesTip : MonoBehaviour
 				connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
 				connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
 
-				if (tipIOType == TipIOType.Input)
+				if (ioType == ConnectionPointIOType.Input)
 					connectionTube.AddOutput(_parentStructure);
-				if (tipIOType == TipIOType.Output)
+				if (ioType == ConnectionPointIOType.Output)
 					connectionTube.AddInput(_parentStructure);
 
 				// Delete the current tip;
@@ -134,12 +134,12 @@ public class TubesTip : MonoBehaviour
         }
     }
 
-    public void SetTipType(TubeTipType type)
+    public void SetTipType(ConnectionPointType type)
     {
         _type = type;
     }
 
-    public TubeTipType GetTipType()
+    public ConnectionPointType GetTipType()
     {
         return _type;
     }
@@ -153,7 +153,7 @@ public class TubesTip : MonoBehaviour
         return 0;
     }
 
-    public void SetParentStructure(Structure parent)
+    public void SetParentStructure(OldStructure parent)
     {
         _parentStructure = parent;
     }
@@ -203,16 +203,16 @@ public class TubesTip : MonoBehaviour
         this.direction = direction;
     }
 
-    public void AddPossibleConnection(KeyValuePair<GridManager.Direction, Tube> directionAndTube)
+    public void AddPossibleConnection(KeyValuePair<GridManager.Direction, OldTube> directionAndTube)
     {
         if(!_possibleTubeConections.Contains(directionAndTube))
         {
             _possibleTubeConections.Add(directionAndTube);
-            SetTipType(TubeTipType.Connection);
+            SetTipType(ConnectionPointType.Connection);
         }
     }
 
-    public void RemovePossibleConnection(Tube tube)
+    public void RemovePossibleConnection(OldTube tube)
     {
         foreach(var pair in _possibleTubeConections)
         {
@@ -224,7 +224,7 @@ public class TubesTip : MonoBehaviour
         }
         if(_possibleTubeConections.Count == 0)
         {
-            SetTipType(_parentStructure is Tube ? TubeTipType.Extension : TubeTipType.Start);
+            SetTipType(_parentStructure is OldTube ? ConnectionPointType.Extension : ConnectionPointType.Start);
         }
     }
 

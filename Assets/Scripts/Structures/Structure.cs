@@ -1,76 +1,49 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public class Structure : MonoBehaviour {
+public class Structure : MonoBehaviour
+{
 
-    public double MaxInputFlow;
-    public double Capacity;
-    public double CurrLoad;
-    public double CurrPresure;
-    public bool Opened;
+    protected List<Structure> _inputs = new List<Structure>();
+    protected List<Structure> _outputs = new List<Structure>();
+    protected List<Product> _products = new List<Product>();
 
-    public readonly List<Structure> inputStructures = new List<Structure>();
-	public readonly List<Structure> outputStructures = new List<Structure>();
+    public int InputCount { get { return _inputs.Count; } }
+    public int OutputCount { get { return _outputs.Count; } }
+
+    public void Start()
+	{
+		DemoUpdateManager.instance.Register(this);
+	}
+
+	virtual public void Process()
+	{
+        // To be defined by its children classes
+	}
     
-    void Awake()
+    virtual public bool Receive(Structure input, Product product)
     {
-        VirtualAwake();
+        // To be defined by its children classes
+        return false;
     }
 
-    virtual protected void VirtualAwake()
+    public Structure GetOutput(int i)
     {
-		
+        return _outputs[i];
     }
 
-    void Start()
+    public Structure GetInput(int i)
     {
-        VirtualStart();
-        //FlowManager.instance.AddNewStructure(this);
+        return _inputs[i];
     }
 
-    virtual protected void VirtualStart()
-	{
-		UpdateManager.instance.Register(this);
-	}
-
-    virtual public void AddInput(Structure connectedStructure)
+    internal void CreateInputConnection(Structure otherStructure)
     {
-        if (!inputStructures.Contains(connectedStructure))
-        {
-            inputStructures.Add(connectedStructure);
-            connectedStructure.AddOutput(this);
-        }
+        _inputs.Add(otherStructure);
     }
 
-	virtual public void AddOutput(Structure connectedStructure)
-	{
-		if (!outputStructures.Contains(connectedStructure))
-		{
-			outputStructures.Add(connectedStructure);
-			connectedStructure.AddInput(this);
-		}
-	}
-
-
-    virtual public void ProcessFlow(double deltaTime)
+    internal void CreateOutputConnection(Structure otherStructure)
     {
-        foreach (var connection in inputStructures)
-        {
-            if (connection.CurrPresure - CurrPresure < -0.005 && connection.Opened)
-            {
-                var outputFlow = MaxInputFlow * deltaTime * CurrPresure;
-                if (outputFlow > CurrLoad) outputFlow = CurrLoad;
-                var totalFlowSent = connection.ReceiveFlow(outputFlow, deltaTime, this);
-                CurrLoad -= totalFlowSent;
-                CurrPresure = CurrLoad / Capacity;
-            }
-        }
-    }
-
-    virtual public double ReceiveFlow(double flow, double deltaTime, Structure sender)
-    {
-        CurrLoad += flow;
-        CurrPresure = CurrLoad / Capacity;
-        return flow;
+        _outputs.Add(otherStructure);
     }
 }

@@ -2,21 +2,21 @@
 using System;
 using System.Collections.Generic;
 
-public class Output : Structure
+public class OldOutput : OldStructure
 {
     public GameObject tipRef;
 
-    private List<TubesTip> _initialPipeTips;
+    private List<ConnectionPoint> _initialPipeTips;
 
     // Use this for initialization
     override protected void VirtualStart ()
     {
 		base.VirtualStart();
 
-        _initialPipeTips = new List<TubesTip>();
+        _initialPipeTips = new List<ConnectionPoint>();
         for(int i = 0; i < transform.childCount; i++)
         {
-            TubesTip childrenTip = transform.GetChild(i).GetComponent<TubesTip>();
+            ConnectionPoint childrenTip = transform.GetChild(i).GetComponent<ConnectionPoint>();
             if (childrenTip)
             {
                 _initialPipeTips.Add(childrenTip);
@@ -27,7 +27,7 @@ public class Output : Structure
         MaxInputFlow = 40;
     }
 
-    override public void AddInput(Structure connectedStructure)
+    override public void AddInput(OldStructure connectedStructure)
     {
         base.AddInput(connectedStructure);
     }
@@ -46,7 +46,7 @@ public class Output : Structure
     }
 
 
-    public override double ReceiveFlow(double flow, double deltaTime, Structure sender)
+    public override double ReceiveFlow(double flow, double deltaTime, OldStructure sender)
     {
         // can't receive anything
         return 0.0;

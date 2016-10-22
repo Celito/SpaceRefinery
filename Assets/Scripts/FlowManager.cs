@@ -5,7 +5,7 @@ public class FlowManager : MonoBehaviour
 {
     public static FlowManager instance;
 
-    private List<Structure> _structure;
+    private List<OldStructure> _structure;
 
     void Awake ()
     {
@@ -15,7 +15,7 @@ public class FlowManager : MonoBehaviour
             return;
         }
         instance = this;
-        _structure = new List<Structure>();
+        _structure = new List<OldStructure>();
     }
     
     void Start ()
@@ -34,7 +34,7 @@ public class FlowManager : MonoBehaviour
         }
 	}
 
-    public void AddNewStructure(Structure structure)
+    public void AddNewStructure(OldStructure structure)
     {
         _structure.Add(structure);
     }

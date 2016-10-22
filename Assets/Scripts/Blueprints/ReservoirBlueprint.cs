@@ -6,13 +6,12 @@ public class ReservoirBlueprint : Blueprint
 
     public GameObject ReservoirRef;
 
-    private BoxCollider _boxCollider;
     private int _collingWith = 0;
 
     // Use this for initialization
     void Start()
     {
-        _boxCollider = GetComponent<BoxCollider>();
+
     }
 
     // Update is called once per frame

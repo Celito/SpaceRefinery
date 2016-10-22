@@ -6,7 +6,7 @@ public class TubeBlueprint : Blueprint
     private GameObject _body;
     private GameObject _tip1;
     private GameObject _tip2;
-    private TubesTip _currTip;
+    private ConnectionPoint _currTip;
     private bool _isCurve = false;
 
     void Awake()
@@ -25,10 +25,10 @@ public class TubeBlueprint : Blueprint
     {
         if (other.gameObject.tag == "TubeTip")
         {
-            _currTip = other.gameObject.GetComponent<TubesTip>();
-            TubesTip tipScript = _currTip.GetComponent<TubesTip>();
+            _currTip = other.gameObject.GetComponent<ConnectionPoint>();
+            ConnectionPoint tipScript = _currTip.GetComponent<ConnectionPoint>();
             GridManager.Direction reverse = GridManager.instance.OppositeDir(tipScript.direction);
-            if (tipScript.GetTipType() != TubesTip.TubeTipType.Connection)
+            if (tipScript.GetTipType() != ConnectionPoint.ConnectionPointType.Connection)
             {
                 int dirValue = (int)tipScript.direction;
                 if (dirValue > 3) dirValue = 7 - dirValue;
@@ -72,7 +72,7 @@ public class TubeBlueprint : Blueprint
     private void SetBlueprintDirection(GridManager.Direction from, GridManager.Direction to)
     {
         var dirVec = from < to ? new Vector2((int)from, (int)to) : new Vector2((int)to, (int)from);
-        var dirBodyInfo = Tube.BodyDirTable[dirVec];
+        var dirBodyInfo = OldTube.BodyDirTable[dirVec];
 
         if (dirBodyInfo.id > 3 && !_isCurve)
         {
@@ -99,9 +99,9 @@ public class TubeBlueprint : Blueprint
 
         _body.transform.localEulerAngles = dirBodyInfo.rotation;
         _body.transform.localPosition = Vector3.zero;
-        _tip1.transform.localEulerAngles = Tube.TipDirTable[from].rotation;
-        _tip1.transform.localPosition = Tube.TipDirTable[from].position;
-        _tip2.transform.localEulerAngles = Tube.TipDirTable[to].rotation;
-        _tip2.transform.localPosition = Tube.TipDirTable[to].position;
+        _tip1.transform.localEulerAngles = OldTube.TipDirTable[from].rotation;
+        _tip1.transform.localPosition = OldTube.TipDirTable[from].position;
+        _tip2.transform.localEulerAngles = OldTube.TipDirTable[to].rotation;
+        _tip2.transform.localPosition = OldTube.TipDirTable[to].position;
     }
 }
