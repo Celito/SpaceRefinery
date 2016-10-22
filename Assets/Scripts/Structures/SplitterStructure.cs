@@ -20,18 +20,18 @@ public class SplitterStructure : Structure
 			if(counter == 1)
 			{
 				// move it to the middle
-				_products[0].transform.position = transform.position + Vector3.up;
+				_products[0].SetTarget(transform.position + Vector3.up);
 			}
 			else if(counter == 2)
 			{
 				// which way are we going?
 				if (_side == -1)
 				{
-					_products[0].transform.position = transform.position + Vector3.up + Vector3.left;
+					_products[0].SetTarget(transform.position + Vector3.up + Vector3.left);
 				}
 				else
 				{
-					_products[0].transform.position = transform.position + Vector3.up + Vector3.right;
+					_products[0].SetTarget(transform.position + Vector3.up + Vector3.right);
 				}
 			}
             else if(counter >= 3)
@@ -51,7 +51,7 @@ public class SplitterStructure : Structure
         if (_products.Count == 0)
         {
             _products.Add(product);
-            product.transform.position = transform.position + Vector3.up - Vector3.forward;
+            product.SetTarget(transform.position + Vector3.up - Vector3.forward);
             return true;
         }
         else
