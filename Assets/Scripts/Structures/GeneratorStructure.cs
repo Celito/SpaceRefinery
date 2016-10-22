@@ -38,19 +38,4 @@ public class GeneratorStructure : Structure
             }
         }
 	}
-
-    public override bool Receive(Structure input, Product product)
-    {
-        Debug.Break();
-        if (_products.Count == 0)
-        {
-            _products.Add(product);
-            product.transform.position = transform.position + Vector3.up;
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
 }

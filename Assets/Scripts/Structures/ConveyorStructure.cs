@@ -20,7 +20,7 @@ public class ConveyorStructure : Structure
         if(_products.Count == 0)
         {
             _products.Add(product);
-            product.transform.position = transform.position + Vector3.up;
+            product.SetTarget(transform.position + Vector3.up);
             return true;
         }
         else

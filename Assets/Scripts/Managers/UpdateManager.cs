@@ -7,7 +7,9 @@ public class UpdateManager : MonoBehaviour
 	public static UpdateManager instance { get { return _instance; } }
 	private static UpdateManager _instance;
 
-	public float frequency = 0.5f;
+	public float tickFrequency = 0.5f;
+
+    public float timePassFromLastTick { get { return _timeAccumulator; } }
 	
 	private List<Structure> _structures = new List<Structure>();
 	private List<Structure> _endPoints = new List<Structure>();
@@ -73,9 +75,9 @@ public class UpdateManager : MonoBehaviour
 	{
 		_timeAccumulator += Time.deltaTime;
 
-		if(_timeAccumulator >= frequency)
+		if(_timeAccumulator >= tickFrequency)
 		{
-			_timeAccumulator -= frequency;
+			_timeAccumulator -= tickFrequency;
 
 			// do update stuff
 			List<Structure> visitedDemoStructures = new List<Structure>(); // should be a dictionary for O(1) search time
