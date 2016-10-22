@@ -13,7 +13,7 @@ public class Structure : MonoBehaviour
 
     public void Start()
 	{
-		DemoUpdateManager.instance.Register(this);
+		UpdateManager.instance.Register(this);
 	}
 
 	virtual public void Process()

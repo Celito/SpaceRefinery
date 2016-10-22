@@ -130,7 +130,7 @@ public class ConnectionPoint : MonoBehaviour
 				// TODO: Delete the rest of the tips from the connection tube
 			}
 
-			UpdateManager.instance.UpdateEndPoints();
+			OldUpdateManager.instance.UpdateEndPoints();
         }
     }
 

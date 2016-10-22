@@ -30,7 +30,7 @@ public class OldStructure : MonoBehaviour {
 
     virtual protected void VirtualStart()
 	{
-		UpdateManager.instance.Register(this);
+		OldUpdateManager.instance.Register(this);
 	}
 
     virtual public void AddInput(OldStructure connectedStructure)
