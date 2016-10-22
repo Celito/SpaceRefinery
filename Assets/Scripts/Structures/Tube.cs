@@ -104,6 +104,8 @@ public class Tube : Structure
 
     override protected void VirtualStart()
     {
+		base.VirtualStart();
+
         var startSection = _sections[0];
         startSection.startDir = startDirection;
         SetSectionDirection(0, endDirection);
@@ -112,10 +114,10 @@ public class Tube : Structure
         Capacity = 10.0;
     }
 
-    override public void ConnectTo(Structure connectedStructure)
+    override public void AddInput(Structure connectedStructure)
     {
-        base.ConnectTo(connectedStructure);
-        if (_connectedStructures.Count == 2)
+        base.AddInput(connectedStructure);
+        if (inputStructures.Count == 2)
         {
             // Remove all possible connections and tips;
             RemoveAllCurrPossibleConnections();
@@ -250,7 +252,7 @@ public class Tube : Structure
         collider.size += new Vector3(Mathf.Abs(sizeIncrement.x), Mathf.Abs(sizeIncrement.y), Mathf.Abs(sizeIncrement.z));
     }
 
-    public void CreateExtensionTips()
+    public void CreateExtensionTips(TubesTip.TipIOType tipIOType)
     {
         _extensionTips = new List<TubesTip>();
         for (int dirIndex = 1; dirIndex < 7; dirIndex++)
@@ -269,6 +271,7 @@ public class Tube : Structure
                 tipScript.name = name + "Tip" + dirIndex;
                 tipScript.SetTipType(TubesTip.TubeTipType.Extension);
                 tipScript.SetParentStructure(this);
+				tipScript.tipIOType = tipIOType;
                 _extensionTips.Add(tipScript);
             }
             else

@@ -11,6 +11,8 @@ public class Output : Structure
     // Use this for initialization
     override protected void VirtualStart ()
     {
+		base.VirtualStart();
+
         _initialPipeTips = new List<TubesTip>();
         for(int i = 0; i < transform.childCount; i++)
         {
@@ -25,16 +27,16 @@ public class Output : Structure
         MaxInputFlow = 40;
     }
 
-    override public void ConnectTo(Structure connectedStructure)
+    override public void AddInput(Structure connectedStructure)
     {
-        base.ConnectTo(connectedStructure);
+        base.AddInput(connectedStructure);
     }
 
     public override void ProcessFlow(double deltaTime)
     {
         //TODO: remove this hard coded value
         var outputFlow = deltaTime * MaxInputFlow;
-        foreach(var connection in _connectedStructures)
+        foreach(var connection in inputStructures)
         {
             if(connection.CurrPresure < CurrPresure && connection.Opened)
             {

@@ -9,7 +9,8 @@ public class Structure : MonoBehaviour {
     public double CurrPresure;
     public bool Opened;
 
-    protected List<Structure> _connectedStructures;
+    public readonly List<Structure> inputStructures = new List<Structure>();
+	public readonly List<Structure> outputStructures = new List<Structure>();
     
     void Awake()
     {
@@ -18,36 +19,42 @@ public class Structure : MonoBehaviour {
 
     virtual protected void VirtualAwake()
     {
-        if (_connectedStructures == null)
-        {
-            _connectedStructures = new List<Structure>();
-        }
+		
     }
 
     void Start()
     {
         VirtualStart();
-        FlowManager.instance.AddNewStructure(this);
+        //FlowManager.instance.AddNewStructure(this);
     }
 
-    virtual protected void VirtualStart(){}
+    virtual protected void VirtualStart()
+	{
+		UpdateManager.instance.Register(this);
+	}
 
-    virtual public void ConnectTo(Structure connectedStructure)
+    virtual public void AddInput(Structure connectedStructure)
     {
-        if (_connectedStructures == null)
+        if (!inputStructures.Contains(connectedStructure))
         {
-            _connectedStructures = new List<Structure>();
-        }
-        if (!_connectedStructures.Contains(connectedStructure))
-        {
-            _connectedStructures.Add(connectedStructure);
-            connectedStructure.ConnectTo(this);
+            inputStructures.Add(connectedStructure);
+            connectedStructure.AddOutput(this);
         }
     }
+
+	virtual public void AddOutput(Structure connectedStructure)
+	{
+		if (!outputStructures.Contains(connectedStructure))
+		{
+			outputStructures.Add(connectedStructure);
+			connectedStructure.AddInput(this);
+		}
+	}
+
 
     virtual public void ProcessFlow(double deltaTime)
     {
-        foreach (var connection in _connectedStructures)
+        foreach (var connection in inputStructures)
         {
             if (connection.CurrPresure - CurrPresure < -0.005 && connection.Opened)
             {

@@ -10,6 +10,12 @@ public class TubesTip : MonoBehaviour
         Connection
     }
 
+	public enum TipIOType
+	{
+		Input,
+		Output
+	}
+
     public delegate void TubeCreated(Tube tube);
     public event TubeCreated OnTubeCreated;
     
@@ -17,6 +23,8 @@ public class TubesTip : MonoBehaviour
     public uint numProjectionCubes = 1;
     public Material normalMaterial;
     public Material highlightedMaterial;
+
+	public TipIOType tipIOType = TipIOType.Input;
 
     private Structure _parentStructure;
     private MeshRenderer _meshRenderer;
@@ -65,7 +73,10 @@ public class TubesTip : MonoBehaviour
     }
 
     public void CreateTube(int connectionIndex = 0)
-    {
+	{
+
+		Debug.Log("CreateTube: " + tipIOType + " - " + connectionIndex);
+
         if(_type == TubeTipType.Start)
         {
             var endTube = Instantiate(GridManager.instance.Tube4);
@@ -74,10 +85,14 @@ public class TubesTip : MonoBehaviour
             Tube endTubeScript = endTube.GetComponent<Tube>();
             endTubeScript.startDirection = GridManager.instance.OppositeDir(direction);
             endTubeScript.endDirection = direction;
-            endTubeScript.CreateExtensionTips();
+            endTubeScript.CreateExtensionTips(tipIOType);
             if (_parentStructure)
             {
-                endTubeScript.ConnectTo(_parentStructure);
+
+				if (tipIOType == TipIOType.Input)
+					endTubeScript.AddOutput(_parentStructure);
+				if (tipIOType == TipIOType.Output)
+					endTubeScript.AddInput(_parentStructure);
             }
             gameObject.SetActive(false);
             _buildingStarted = false;
@@ -88,22 +103,34 @@ public class TubesTip : MonoBehaviour
             (_parentStructure as Tube).ExtendTube(direction);
         }
         else /* _type == TubeTipType.Connection */
-        {
+		{
+
+			Debug.Log("Debug: " + tipIOType);
             var connectionEntry = _possibleTubeConections[connectionIndex % _possibleTubeConections.Count];
             var connectionTube = connectionEntry.Value;
             var connectionDirection = connectionEntry.Key;
-            if (_parentStructure is Tube)
-            {
-                // TODO: Combine the two tubes into one;
-            }
-            else
-            {
-                connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
-                connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
-                connectionTube.ConnectTo(_parentStructure);
-                // Delete the current tip;
-                Destroy(gameObject);
-            }
+
+			if (_parentStructure is Tube)
+			{
+				// TODO: Combine the two tubes into one;
+			}
+			else
+			{
+				connectionTube.ExtendTube(GridManager.instance.OppositeDir(connectionDirection));
+				connectionTube.SetTipDirection(GridManager.instance.OppositeDir(direction));
+
+				if (tipIOType == TipIOType.Input)
+					connectionTube.AddOutput(_parentStructure);
+				if (tipIOType == TipIOType.Output)
+					connectionTube.AddInput(_parentStructure);
+
+				// Delete the current tip;
+				Destroy(gameObject);
+
+				// TODO: Delete the rest of the tips from the connection tube
+			}
+
+			UpdateManager.instance.UpdateEndPoints();
         }
     }
 
