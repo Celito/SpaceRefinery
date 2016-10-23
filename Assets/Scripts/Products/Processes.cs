@@ -1,9 +1,8 @@
 ﻿using System;
 
-[FlagsAttribute]
-public enum Processes: short
+public enum Processes
 {
-    Fry,
-    Chop,
-    Cut
+    Fry = 1,
+    Chop = 2,
+    Cut = 4
 }

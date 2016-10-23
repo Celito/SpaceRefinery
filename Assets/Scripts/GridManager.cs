@@ -10,13 +10,13 @@ public class GridManager : MonoBehaviour
 
     public float cubesSize = 1.0f;
 
-    public GameObject TubesTip;
-    public GameObject ProjectionCube;
+    public GameObject connectionPointPrefab;
+
+    public GameObject movementPlaneGameObject;
+
+    // TODO: Review the need for this old varibles to clean it up the code;
     public GameObject TubeBodyStraight;
     public GameObject TubeBodyCurve;
-
-    public GameObject MovementPlaneGameObj;
-    public MeshCollider MovementPlaneMeshCollider;
     
     public GameObject Tube4;
 
@@ -29,6 +29,7 @@ public class GridManager : MonoBehaviour
     public Material BuildingBlockedMaterial;
 
     private int _currPartId = -1;
+    private MeshCollider _movementPlaneMeshCollider;
 
     void Awake()
     {
@@ -44,7 +45,7 @@ public class GridManager : MonoBehaviour
     
     void Start ()
     {
-        MovementPlaneMeshCollider = MovementPlaneGameObj.GetComponent<MeshCollider>();
+        _movementPlaneMeshCollider = movementPlaneGameObject.GetComponent<MeshCollider>();
     }
 	
 	// Update is called once per frame
@@ -56,7 +57,7 @@ public class GridManager : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit raycastHit;
             if (!EventSystem.current.IsPointerOverGameObject() && 
-                MovementPlaneMeshCollider.Raycast(ray, out raycastHit, 10000))
+                _movementPlaneMeshCollider.Raycast(ray, out raycastHit, 10000))
             {
                 SelectedConstructionPart.SetActive(true);
                 Vector3 hitPoint = raycastHit.point;
@@ -73,11 +74,11 @@ public class GridManager : MonoBehaviour
         
         // Move up and down with the mouse wheel;
         Vector3 upNDownVec = Vector3.up * (Input.GetAxis("UpNDown") > 0 ? 1 : Input.GetAxis("UpNDown") < 0 ? -1 : 0);
-        MovementPlaneGameObj.transform.Translate(upNDownVec);
+        movementPlaneGameObject.transform.Translate(upNDownVec);
         MainCamera.instance.cameraBoom.transform.Translate(upNDownVec, Space.World);
 
         // Move arround the grid with the vertical and horizontal axis
-        Vector3 planeNormal = MovementPlaneGameObj.transform.up;
+        Vector3 planeNormal = movementPlaneGameObject.transform.up;
         Vector3 cameraForward = MainCamera.instance.transform.forward;
         Vector3 cameraRight = MainCamera.instance.transform.right;
         Vector3 movementForward = ProjectVectorOntoPlane(cameraForward, planeNormal).normalized * Input.GetAxis("Vertical");
@@ -92,7 +93,11 @@ public class GridManager : MonoBehaviour
         return vec + planeNormal.normalized * distance;
     }
 
-    public void SelectPart ( int partId )
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="partId"></param>
+    public void SelectStructure ( int partId )
     {
         if(partId != _currPartId)
         {

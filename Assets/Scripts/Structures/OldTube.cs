@@ -217,7 +217,7 @@ public class OldTube : OldStructure
             else if (extensionTip == null && !hitSomething)
             {
                 // create new extension tip
-                var tip = Instantiate(GridManager.instance.TubesTip);
+                var tip = Instantiate(GridManager.instance.connectionPointPrefab);
                 var tipScript = tip.GetComponent<ConnectionPoint>();
                 tipScript.transform.parent = transform;
                 tipScript.MoveTo(GetTubesEndPosition());
@@ -262,7 +262,7 @@ public class OldTube : OldStructure
             bool hitSomething = Physics.Raycast(transform.position, directionVector, out hitInfo, 1);
             if (direction != startDirection && !hitSomething)
             {
-                var tip = Instantiate(GridManager.instance.TubesTip);
+                var tip = Instantiate(GridManager.instance.connectionPointPrefab);
                 var tipScript = tip.GetComponent<ConnectionPoint>();
                 tipScript.transform.parent = transform;
                 tipScript.transform.localPosition = Vector3.zero;
