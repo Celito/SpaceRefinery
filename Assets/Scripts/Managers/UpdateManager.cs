@@ -16,18 +16,24 @@ public class UpdateManager : MonoBehaviour
 
 	private float _timeAccumulator;
 
+	// attempt to optimize:
+	private List<Structure> _cleanPath = new List<Structure>();
+	private bool _dirty = false;	
+
 	public void Register(Structure structure)
 	{
 		_structures.Add(structure);
 
 		UpdateEndPoints();
+
+		_dirty = true;
 	}
 
 	public void UpdateEndPoints()
 	{
 		_endPoints.Clear();
 
-		List<Structure> searchedDemoStructures = new List<Structure>();		
+		Dictionary<Structure, bool> searchedDemoStructures = new Dictionary<Structure, bool>();
 		Queue<Structure> pendingDemoStructures = new Queue<Structure>();
 
 		for(int i = 0; i < _structures.Count; ++i)
@@ -44,14 +50,15 @@ public class UpdateManager : MonoBehaviour
 		{
 			Structure current = pendingDemoStructures.Dequeue();
 
-			searchedDemoStructures.Add(current);
+			searchedDemoStructures.Add(current, true);
 
 			if(current.OutputCount > 0)
 			{
 				for(int i = 0; i < current.OutputCount; i++)
 				{
                     Structure potential = current.GetOutput(i);
-					if(searchedDemoStructures.IndexOf(potential) == -1)
+
+					if (searchedDemoStructures.ContainsKey(potential) == false)
 						pendingDemoStructures.Enqueue(potential);
 				}
 			}
@@ -79,33 +86,50 @@ public class UpdateManager : MonoBehaviour
 		{
 			_timeAccumulator -= tickFrequency;
 
-			// do update stuff
-			List<Structure> visitedDemoStructures = new List<Structure>(); // should be a dictionary for O(1) search time
-			Queue<Structure> pendingDemoStructures = new Queue<Structure>();
-
-			foreach (Structure endPoint in _endPoints)
+			if(_dirty == false)
 			{
-				pendingDemoStructures.Enqueue(endPoint);
-
-				visitedDemoStructures.Add(endPoint);
+				// optimized "clean" path
+				for (int i = 0; i < _cleanPath.Count; ++i)
+					_cleanPath[i].Process();
 			}
-
-			while(pendingDemoStructures.Count > 0)
+			else
 			{
-				Structure structure = pendingDemoStructures.Dequeue();
+				// dirty path
+				_cleanPath.Clear();
+				
+				Dictionary<Structure, bool> visitedDemoStructures = new Dictionary<Structure, bool>();
+				Queue<Structure> pendingDemoStructures = new Queue<Structure>();
 
-				structure.Process();
-
-				for(int i = 0; i < structure.InputCount; i++)
+				foreach (Structure endPoint in _endPoints)
 				{
-                    Structure input = structure.GetInput(i);
-					if (visitedDemoStructures.IndexOf(input) == -1)
-					{
-						pendingDemoStructures.Enqueue(input);
+					pendingDemoStructures.Enqueue(endPoint);
 
-						visitedDemoStructures.Add(input);
+					visitedDemoStructures.Add(endPoint, true);
+				}
+
+				while (pendingDemoStructures.Count > 0)
+				{
+					Structure structure = pendingDemoStructures.Dequeue();
+
+					structure.Process();
+
+					// add this to the clean path
+					_cleanPath.Add(structure);
+
+					for (int i = 0; i < structure.InputCount; i++)
+					{
+						Structure input = structure.GetInput(i);
+
+						if (visitedDemoStructures.ContainsKey(input) == false)
+						{
+							pendingDemoStructures.Enqueue(input);
+
+							visitedDemoStructures.Add(input, true);
+						}
 					}
 				}
+
+				_dirty = false;
 			}
 		}
 	}

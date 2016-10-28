@@ -92,4 +92,9 @@ public class SimpleRandomBuilder : MonoBehaviour // not really random at all :P
 		inputStructure.CreateOutputConnection(outputStructure);
 		outputStructure.CreateInputConnection(inputStructure);
 	}
+
+	protected void OnGUI()
+	{
+		GUI.TextArea(new Rect(5.0f, 5.0f, 100.0f, 30.0f), "Replicas: " + numberOfTestReplicas);
+	}
 }
